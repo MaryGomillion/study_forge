@@ -1,0 +1,980 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>StudyForge — Milestone 1: Core & Set Management</title>
+  <style>
+    /* ==================== CSS DESIGN TOKENS ==================== */
+    :root {
+      --bg-app: #0f1117;
+      --bg-sidebar: #161922;
+      --bg-card: #1c202b;
+      --bg-card-hover: #242937;
+      --bg-input: #12151d;
+      --border: #2c3244;
+      --text-primary: #eef1f8;
+      --text-secondary: #9aa3b8;
+      --accent: #6366f1;
+      --accent-hover: #4f46e5;
+      --accent-soft: rgba(99, 102, 241, 0.14);
+      --success: #10b981;
+      --danger: #ef4444;
+      --danger-soft: rgba(239, 68, 68, 0.14);
+      --warning: #f59e0b;
+      --radius: 10px;
+      --shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+      background-color: var(--bg-app);
+      color: var(--text-primary);
+      display: flex;
+      min-height: 100vh;
+      line-height: 1.5;
+    }
+
+    /* ==================== SIDEBAR ==================== */
+    .sidebar {
+      width: 290px;
+      background-color: var(--bg-sidebar);
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      padding: 20px 16px;
+      flex-shrink: 0;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding-bottom: 18px;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 18px;
+    }
+
+    .brand-left {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 1.2rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+    }
+
+    .brand-badge {
+      background: var(--accent);
+      color: #fff;
+      width: 30px;
+      height: 30px;
+      border-radius: 8px;
+      display: grid;
+      place-items: center;
+      font-size: 0.9rem;
+      font-weight: 800;
+    }
+
+    .milestone-pill {
+      font-size: 0.7rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      padding: 3px 8px;
+      border-radius: 999px;
+      background: var(--accent-soft);
+      color: #818cf8;
+      border: 1px solid rgba(99, 102, 241, 0.3);
+    }
+
+    .sidebar-section-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.75rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--text-secondary);
+      margin-bottom: 10px;
+      padding: 0 6px;
+    }
+
+    .set-list {
+      list-style: none;
+      flex: 1;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .set-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 11px 12px;
+      border-radius: 8px;
+      cursor: pointer;
+      color: var(--text-secondary);
+      border: 1px solid transparent;
+      transition: all 0.15s ease;
+      gap: 8px;
+    }
+
+    .set-item:hover {
+      background: var(--bg-card);
+      color: var(--text-primary);
+    }
+
+    .set-item.active {
+      background: var(--accent-soft);
+      color: var(--text-primary);
+      border-color: rgba(99, 102, 241, 0.35);
+      font-weight: 600;
+    }
+
+    .set-item-info {
+      overflow: hidden;
+      flex: 1;
+    }
+
+    .set-item-title {
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      font-size: 0.93rem;
+    }
+
+    .set-item-meta {
+      font-size: 0.75rem;
+      color: var(--text-secondary);
+      margin-top: 2px;
+    }
+
+    .sidebar-footer {
+      border-top: 1px solid var(--border);
+      padding-top: 14px;
+      margin-top: 14px;
+      font-size: 0.78rem;
+      color: var(--text-secondary);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .storage-indicator {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--success);
+    }
+
+    /* ==================== MAIN WORKSPACE ==================== */
+    .main {
+      flex: 1;
+      padding: 36px 44px;
+      max-width: 980px;
+      margin: 0 auto;
+      width: 100%;
+    }
+
+    .header-bar {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+
+    .set-title-display {
+      font-size: 1.85rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+    }
+
+    .set-desc-display {
+      color: var(--text-secondary);
+      font-size: 0.95rem;
+      margin-top: 4px;
+    }
+
+    /* ==================== TABS ==================== */
+    .tabs {
+      display: flex;
+      gap: 8px;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 28px;
+    }
+
+    .tab-btn {
+      background: none;
+      border: none;
+      color: var(--text-secondary);
+      font-size: 0.95rem;
+      font-weight: 600;
+      padding: 10px 18px;
+      cursor: pointer;
+      border-bottom: 2px solid transparent;
+      transition: color 0.15s, border-color 0.15s;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .tab-btn:hover {
+      color: var(--text-primary);
+    }
+
+    .tab-btn.active {
+      color: var(--accent);
+      border-bottom-color: var(--accent);
+    }
+
+    .tab-count {
+      font-size: 0.75rem;
+      padding: 1px 7px;
+      border-radius: 999px;
+      background: var(--bg-card);
+      color: var(--text-secondary);
+      border: 1px solid var(--border);
+    }
+
+    /* ==================== BUTTONS ==================== */
+    button {
+      font-family: inherit;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      padding: 9px 15px;
+      border-radius: 8px;
+      font-size: 0.88rem;
+      font-weight: 600;
+      cursor: pointer;
+      border: 1px solid transparent;
+      transition: all 0.15s ease;
+    }
+
+    .btn-primary {
+      background: var(--accent);
+      color: #fff;
+    }
+
+    .btn-primary:hover {
+      background: var(--accent-hover);
+    }
+
+    .btn-secondary {
+      background: var(--bg-card);
+      color: var(--text-primary);
+      border-color: var(--border);
+    }
+
+    .btn-secondary:hover {
+      background: var(--bg-card-hover);
+    }
+
+    .btn-danger {
+      background: var(--danger-soft);
+      color: var(--danger);
+      border-color: rgba(239, 68, 68, 0.35);
+    }
+
+    .btn-danger:hover {
+      background: var(--danger);
+      color: #fff;
+    }
+
+    .btn-sm {
+      padding: 6px 11px;
+      font-size: 0.8rem;
+    }
+
+    /* ==================== PANELS & CARDS ==================== */
+    .panel {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 24px;
+      margin-bottom: 20px;
+    }
+
+    .panel-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 14px;
+    }
+
+    .panel-title {
+      font-size: 1.08rem;
+      font-weight: 700;
+    }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 14px;
+      margin-bottom: 22px;
+    }
+
+    .stat-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 18px 20px;
+    }
+
+    .stat-label {
+      font-size: 0.78rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-secondary);
+      font-weight: 700;
+    }
+
+    .stat-value {
+      font-size: 1.65rem;
+      font-weight: 800;
+      margin-top: 4px;
+      color: var(--text-primary);
+    }
+
+    .preview-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      margin-top: 14px;
+    }
+
+    .preview-item {
+      background: var(--bg-input);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 12px 14px;
+      font-size: 0.9rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 48px 24px;
+      color: var(--text-secondary);
+      border: 1px dashed var(--border);
+      border-radius: var(--radius);
+      background: rgba(28, 32, 43, 0.4);
+    }
+
+    /* ==================== CUSTOM MODALS ==================== */
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(8, 10, 15, 0.75);
+      backdrop-filter: blur(3px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      z-index: 1000;
+    }
+
+    .modal-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      box-shadow: var(--shadow);
+      width: 100%;
+      max-width: 460px;
+      padding: 24px;
+      animation: modalFadeIn 0.16s ease-out;
+    }
+
+    @keyframes modalFadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(8px) scale(0.98);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+      }
+    }
+
+    .modal-title {
+      font-size: 1.15rem;
+      font-weight: 700;
+      margin-bottom: 14px;
+    }
+
+    .form-group {
+      margin-bottom: 14px;
+    }
+
+    label {
+      display: block;
+      font-size: 0.83rem;
+      font-weight: 600;
+      color: var(--text-secondary);
+      margin-bottom: 6px;
+    }
+
+    input[type="text"], textarea {
+      width: 100%;
+      background: var(--bg-input);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 10px 12px;
+      color: var(--text-primary);
+      font-family: inherit;
+      font-size: 0.92rem;
+      outline: none;
+      transition: border-color 0.15s;
+    }
+
+    input[type="text"]:focus, textarea:focus {
+      border-color: var(--accent);
+    }
+
+    textarea {
+      resize: vertical;
+      min-height: 76px;
+    }
+
+    .modal-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+      margin-top: 20px;
+    }
+
+    /* ==================== TOAST NOTIFICATION ==================== */
+    .toast-container {
+      position: fixed;
+      bottom: 22px;
+      right: 22px;
+      z-index: 1100;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .toast {
+      background: var(--bg-card);
+      border: 1px solid var(--accent);
+      color: var(--text-primary);
+      padding: 11px 16px;
+      border-radius: 8px;
+      box-shadow: var(--shadow);
+      font-size: 0.88rem;
+      font-weight: 600;
+      animation: modalFadeIn 0.18s ease-out;
+    }
+
+    .hidden {
+      display: none !important;
+    }
+
+    @media (max-width: 780px) {
+      body {
+        flex-direction: column;
+      }
+      .sidebar {
+        width: 100%;
+        border-right: none;
+        border-bottom: 1px solid var(--border);
+      }
+      .main {
+        padding: 24px 18px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ==================== SIDEBAR NAVIGATION ==================== -->
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="brand-left">
+        <div class="brand-badge">SF</div>
+        <span>StudyForge</span>
+      </div>
+      <span class="milestone-pill">Milestone 1</span>
+    </div>
+
+    <div class="sidebar-section-header">
+      <span>Study Sets</span>
+      <button class="btn btn-primary btn-sm" id="openCreateSetBtn">+ New Set</button>
+    </div>
+
+    <ul class="set-list" id="setList"></ul>
+
+    <div class="sidebar-footer">
+      <span class="storage-indicator">
+        <span class="status-dot"></span>
+        <span>localStorage Active</span>
+      </span>
+      <button class="btn btn-secondary btn-sm" id="resetDemoBtn" title="Restore default demo sets">Reset Demo</button>
+    </div>
+  </aside>
+
+  <!-- ==================== MAIN WORKSPACE ==================== -->
+  <main class="main">
+    <!-- Empty State when all sets are deleted -->
+    <div id="noSetSelectedView" class="empty-state hidden">
+      <h2 style="color: var(--text-primary); margin-bottom: 8px;">No Study Sets Found</h2>
+      <p style="margin-bottom: 18px;">Create your first study set to start organizing flashcards and quizzes.</p>
+      <button class="btn btn-primary" id="emptyCreateSetBtn">+ Create Your First Set</button>
+    </div>
+
+    <!-- Active Set Workspace -->
+    <div id="setWorkspace">
+      <div class="header-bar">
+        <div>
+          <h1 class="set-title-display" id="activeSetTitle"></h1>
+          <p class="set-desc-display" id="activeSetDesc"></p>
+        </div>
+        <div style="display:flex; gap:8px;">
+          <button class="btn btn-secondary btn-sm" id="openEditSetBtn">Rename / Edit Set</button>
+          <button class="btn btn-danger btn-sm" id="openDeleteSetBtn">Delete Set</button>
+        </div>
+      </div>
+
+      <!-- Set Overview Stats -->
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-label">Flashcards in Set</div>
+          <div class="stat-value" id="statFlashcardCount">0</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Quiz Questions in Set</div>
+          <div class="stat-value" id="statQuizCount">0</div>
+        </div>
+      </div>
+
+      <!-- Mode Tabs -->
+      <div class="tabs">
+        <button class="tab-btn active" data-tab="flashcards" id="tabFlashcards">
+          <span>Flashcards</span>
+          <span class="tab-count" id="tabFcCount">0</span>
+        </button>
+        <button class="tab-btn" data-tab="quiz" id="tabQuiz">
+          <span>Quiz</span>
+          <span class="tab-count" id="tabQuizCount">0</span>
+        </button>
+      </div>
+
+      <!-- Flashcards Tab Content (Milestone 1 Foundation) -->
+      <section id="flashcardsSection">
+        <div class="panel">
+          <div class="panel-header">
+            <h3 class="panel-title">Flashcard Deck Foundation</h3>
+            <span class="milestone-pill">Player &amp; Editor in Milestone 2</span>
+          </div>
+          <p style="color: var(--text-secondary); font-size: 0.92rem;">
+            This study set currently stores the following flashcards in <code>localStorage</code>. In <strong>Milestone 2</strong>, we will unlock the 3D flip stage, keyboard shortcuts, shuffling, and card creation form here.
+          </p>
+          <div class="preview-list" id="fcPreviewList"></div>
+        </div>
+      </section>
+
+      <!-- Quiz Tab Content (Milestone 1 Foundation) -->
+      <section id="quizSection" class="hidden">
+        <div class="panel">
+          <div class="panel-header">
+            <h3 class="panel-title">Quiz Question Bank Foundation</h3>
+            <span class="milestone-pill">Builder &amp; Runner in Milestone 3 &amp; 4</span>
+          </div>
+          <p style="color: var(--text-secondary); font-size: 0.92rem;">
+            This study set currently stores the following quiz items in <code>localStorage</code>. In <strong>Milestones 3 &amp; 4</strong>, we will add the Multiple Choice &amp; Short Answer question builder, uninterrupted quiz runner, and self-grading rubric screen here.
+          </p>
+          <div class="preview-list" id="quizPreviewList"></div>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <!-- ==================== MODAL: CREATE / EDIT SET ==================== -->
+  <div class="modal-backdrop hidden" id="setFormModal">
+    <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="setModalTitle">
+      <h3 class="modal-title" id="setModalTitle">Create New Study Set</h3>
+      <form id="setModalForm">
+        <div class="form-group">
+          <label for="setModalNameInput">Set Title *</label>
+          <input type="text" id="setModalNameInput" placeholder="e.g., Biology 101, Calculus III" required />
+        </div>
+        <div class="form-group">
+          <label for="setModalDescInput">Description (Optional)</label>
+          <textarea id="setModalDescInput" placeholder="What chapters or topics does this set cover?"></textarea>
+        </div>
+        <div class="modal-actions">
+          <button type="button" class="btn btn-secondary" id="closeSetModalBtn">Cancel</button>
+          <button type="submit" class="btn btn-primary" id="saveSetModalBtn">Save Set</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ==================== MODAL: DELETE CONFIRMATION ==================== -->
+  <div class="modal-backdrop hidden" id="deleteConfirmModal">
+    <div class="modal-card" role="dialog" aria-modal="true">
+      <h3 class="modal-title">Delete Study Set?</h3>
+      <p style="color: var(--text-secondary); font-size: 0.92rem;" id="deleteConfirmMessage">
+        Are you sure you want to delete this study set? This action cannot be undone.
+      </p>
+      <div class="modal-actions">
+        <button type="button" class="btn btn-secondary" id="cancelDeleteModalBtn">Cancel</button>
+        <button type="button" class="btn btn-danger" id="confirmDeleteModalBtn">Delete Set</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast notifications -->
+  <div class="toast-container" id="toastContainer"></div>
+
+  <script>
+    // ==================== STATE & PERSISTENCE (MILESTONE 1) ====================
+    const STORAGE_KEY = "studyforge_sets_v1";
+
+    // Pre-loaded sample sets for immediate Milestone 1 testing
+    const defaultSets = [
+      {
+        id: "set_demo_1",
+        title: "Sample: Biology & Algorithms",
+        description: "Pre-loaded demo set verifying localStorage persistence for flashcards and quizzes.",
+        flashcards: [
+          { id: "fc_1", front: "Mitochondria", back: "Organelle that generates most of the cell's ATP." },
+          { id: "fc_2", front: "Big-O of Binary Search", back: "O(log n) time complexity on a sorted array." },
+          { id: "fc_3", front: "Osmosis", back: "Net movement of solvent molecules across a semipermeable membrane." }
+        ],
+        questions: [
+          {
+            id: "q_1",
+            type: "mc",
+            prompt: "Which data structure operates on a Last-In, First-Out (LIFO) principle?",
+            options: ["Queue", "Stack", "Hash Table", "Linked List"],
+            correctIndex: 1
+          },
+          {
+            id: "q_2",
+            type: "sa",
+            prompt: "Explain how negative feedback loops maintain homeostasis in the body.",
+            criteria: [
+              "States that a stimulus triggers a response that counteracts the initial change",
+              "Provides a valid physiological example (e.g., body temperature or blood glucose)"
+            ],
+            sampleAnswer: "Sensors detect a deviation from a set point and activate effectors to reverse the drift."
+          }
+        ]
+      },
+      {
+        id: "set_demo_2",
+        title: "American History: Constitutional Era",
+        description: "Key dates, Federalist papers, and separation of powers.",
+        flashcards: [
+          { id: "fc_4", front: "Federalist No. 10", back: "Madison's essay arguing that a large republic best controls factions." }
+        ],
+        questions: [
+          {
+            id: "q_3",
+            type: "mc",
+            prompt: "In what year was the U.S. Constitution ratified?",
+            options: ["1776", "1781", "1788", "1801"],
+            correctIndex: 2
+          }
+        ]
+      }
+    ];
+
+    let state = {
+      sets: [],
+      activeSetId: null,
+      activeTab: "flashcards", // 'flashcards' | 'quiz'
+      modalMode: "create"      // 'create' | 'edit'
+    };
+
+    /**
+     * Load study sets from window.localStorage or seed with defaultSets.
+     */
+    function loadState() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (raw) {
+          const parsed = JSON.parse(raw);
+          state.sets = Array.isArray(parsed) ? parsed : JSON.parse(JSON.stringify(defaultSets));
+        } else {
+          state.sets = JSON.parse(JSON.stringify(defaultSets));
+          saveState();
+        }
+      } catch (err) {
+        console.error("Failed to read from localStorage:", err);
+        state.sets = JSON.parse(JSON.stringify(defaultSets));
+      }
+
+      if (state.sets.length > 0) {
+        state.activeSetId = state.sets[0].id;
+      } else {
+        state.activeSetId = null;
+      }
+      renderAll();
+    }
+
+    /**
+     * Synchronize current state.sets array to window.localStorage.
+     */
+    function saveState() {
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(state.sets));
+      } catch (err) {
+        console.error("Failed to save to localStorage:", err);
+      }
+    }
+
+    function getActiveSet() {
+      return state.sets.find(s => s.id === state.activeSetId) || null;
+    }
+
+    function generateId(prefix) {
+      return `${prefix}_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`;
+    }
+
+    function showToast(message) {
+      const container = document.getElementById("toastContainer");
+      const toast = document.createElement("div");
+      toast.className = "toast";
+      toast.textContent = message;
+      container.appendChild(toast);
+      setTimeout(() => {
+        toast.remove();
+      }, 2600);
+    }
+
+    // ==================== SET CRUD OPERATIONS ====================
+    function selectSet(setId) {
+      state.activeSetId = setId;
+      renderAll();
+    }
+
+    function openSetModal(mode) {
+      state.modalMode = mode;
+      const modal = document.getElementById("setFormModal");
+      const titleEl = document.getElementById("setModalTitle");
+      const nameInput = document.getElementById("setModalNameInput");
+      const descInput = document.getElementById("setModalDescInput");
+
+      if (mode === "edit") {
+        const current = getActiveSet();
+        if (!current) return;
+        titleEl.textContent = "Rename / Edit Study Set";
+        nameInput.value = current.title;
+        descInput.value = current.description || "";
+      } else {
+        titleEl.textContent = "Create New Study Set";
+        nameInput.value = "";
+        descInput.value = "";
+      }
+
+      modal.classList.remove("hidden");
+      nameInput.focus();
+    }
+
+    function closeSetModal() {
+      document.getElementById("setFormModal").classList.add("hidden");
+    }
+
+    document.getElementById("openCreateSetBtn").addEventListener("click", () => openSetModal("create"));
+    document.getElementById("emptyCreateSetBtn").addEventListener("click", () => openSetModal("create"));
+    document.getElementById("openEditSetBtn").addEventListener("click", () => openSetModal("edit"));
+    document.getElementById("closeSetModalBtn").addEventListener("click", closeSetModal);
+
+    document.getElementById("setModalForm").addEventListener("submit", (e) => {
+      e.preventDefault();
+      const title = document.getElementById("setModalNameInput").value.trim();
+      const description = document.getElementById("setModalDescInput").value.trim();
+      if (!title) return;
+
+      if (state.modalMode === "create") {
+        const newSet = {
+          id: generateId("set"),
+          title,
+          description,
+          flashcards: [],
+          questions: []
+        };
+        state.sets.push(newSet);
+        state.activeSetId = newSet.id;
+        saveState();
+        renderAll();
+        showToast(`Created set "${title}"`);
+      } else {
+        const current = getActiveSet();
+        if (current) {
+          current.title = title;
+          current.description = description;
+          saveState();
+          renderAll();
+          showToast(`Updated set "${title}"`);
+        }
+      }
+
+      closeSetModal();
+    });
+
+    // Delete Modal Handlers
+    document.getElementById("openDeleteSetBtn").addEventListener("click", () => {
+      const current = getActiveSet();
+      if (!current) return;
+      document.getElementById("deleteConfirmMessage").textContent =
+        `Are you sure you want to delete "${current.title}" and all of its contents?`;
+      document.getElementById("deleteConfirmModal").classList.remove("hidden");
+    });
+
+    document.getElementById("cancelDeleteModalBtn").addEventListener("click", () => {
+      document.getElementById("deleteConfirmModal").classList.add("hidden");
+    });
+
+    document.getElementById("confirmDeleteModalBtn").addEventListener("click", () => {
+      const current = getActiveSet();
+      if (!current) return;
+      const deletedTitle = current.title;
+      state.sets = state.sets.filter(s => s.id !== current.id);
+      state.activeSetId = state.sets.length > 0 ? state.sets[0].id : null;
+      saveState();
+      document.getElementById("deleteConfirmModal").classList.add("hidden");
+      renderAll();
+      showToast(`Deleted "${deletedTitle}"`);
+    });
+
+    // Reset Demo Data Button
+    document.getElementById("resetDemoBtn").addEventListener("click", () => {
+      state.sets = JSON.parse(JSON.stringify(defaultSets));
+      state.activeSetId = state.sets[0].id;
+      saveState();
+      renderAll();
+      showToast("Demo study sets restored");
+    });
+
+    // ==================== TAB NAVIGATION ====================
+    document.querySelectorAll(".tab-btn").forEach(btn => {
+      btn.addEventListener("click", () => {
+        state.activeTab = btn.dataset.tab;
+        renderTabs();
+      });
+    });
+
+    function renderTabs() {
+      const isFc = state.activeTab === "flashcards";
+      document.getElementById("tabFlashcards").classList.toggle("active", isFc);
+      document.getElementById("tabQuiz").classList.toggle("active", !isFc);
+      document.getElementById("flashcardsSection").classList.toggle("hidden", !isFc);
+      document.getElementById("quizSection").classList.toggle("hidden", isFc);
+    }
+
+    // ==================== RENDER FUNCTIONS ====================
+    function renderSidebar() {
+      const listEl = document.getElementById("setList");
+      listEl.innerHTML = "";
+
+      state.sets.forEach(set => {
+        const li = document.createElement("li");
+        li.className = `set-item ${set.id === state.activeSetId ? "active" : ""}`;
+        li.innerHTML = `
+          <div class="set-item-info">
+            <div class="set-item-title">${escapeHtml(set.title)}</div>
+            <div class="set-item-meta">${set.flashcards.length} cards &bull; ${set.questions.length} quiz Qs</div>
+          </div>
+        `;
+        li.addEventListener("click", () => selectSet(set.id));
+        listEl.appendChild(li);
+      });
+    }
+
+    function renderWorkspace() {
+      const set = getActiveSet();
+      const emptyView = document.getElementById("noSetSelectedView");
+      const workspace = document.getElementById("setWorkspace");
+
+      if (!set) {
+        emptyView.classList.remove("hidden");
+        workspace.classList.add("hidden");
+        return;
+      }
+
+      emptyView.classList.add("hidden");
+      workspace.classList.remove("hidden");
+
+      document.getElementById("activeSetTitle").textContent = set.title;
+      document.getElementById("activeSetDesc").textContent = set.description || "No description provided.";
+
+      document.getElementById("statFlashcardCount").textContent = set.flashcards.length;
+      document.getElementById("statQuizCount").textContent = set.questions.length;
+      document.getElementById("tabFcCount").textContent = set.flashcards.length;
+      document.getElementById("tabQuizCount").textContent = set.questions.length;
+
+      // Populate Milestone 1 data inspection previews
+      const fcPreviewEl = document.getElementById("fcPreviewList");
+      if (set.flashcards.length === 0) {
+        fcPreviewEl.innerHTML = `<div style="color:var(--text-secondary); font-size:0.88rem; margin-top:6px;">No flashcards in this set yet.</div>`;
+      } else {
+        fcPreviewEl.innerHTML = set.flashcards.map((c, i) => `
+          <div class="preview-item">
+            <span><strong>${i + 1}. ${escapeHtml(c.front)}</strong></span>
+            <span style="color:var(--text-secondary);">${escapeHtml(c.back)}</span>
+          </div>
+        `).join("");
+      }
+
+      const quizPreviewEl = document.getElementById("quizPreviewList");
+      if (set.questions.length === 0) {
+        quizPreviewEl.innerHTML = `<div style="color:var(--text-secondary); font-size:0.88rem; margin-top:6px;">No quiz questions in this set yet.</div>`;
+      } else {
+        quizPreviewEl.innerHTML = set.questions.map((q, i) => `
+          <div class="preview-item">
+            <span><strong>${i + 1}. ${escapeHtml(q.prompt)}</strong></span>
+            <span class="milestone-pill">${q.type === "mc" ? "Multiple Choice" : "Short Answer"}</span>
+          </div>
+        `).join("");
+      }
+
+      renderTabs();
+    }
+
+    function renderAll() {
+      renderSidebar();
+      renderWorkspace();
+    }
+
+    function escapeHtml(str) {
+      return String(str)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+    }
+
+    // Boot application
+    loadState();
+  </script>
+</body>
+</html>
