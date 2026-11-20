@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>StudyForge — Milestone 3: Quiz Builder &amp; Test Runner</title>
+  <title>StudyForge — Flashcards &amp; Self-Graded Quizzes</title>
   <style>
     /* ==================== CSS DESIGN TOKENS ==================== */
     :root {
@@ -41,6 +41,19 @@
       display: flex;
       min-height: 100vh;
       line-height: 1.5;
+    }
+
+    /* ==================== FULL-WINDOW QUIZ FOCUS MODE ==================== */
+    body.quiz-fullscreen .sidebar,
+    body.quiz-fullscreen #workspaceHeaderBar,
+    body.quiz-fullscreen #workspaceStatsGrid,
+    body.quiz-fullscreen #workspaceTabs {
+      display: none !important;
+    }
+
+    body.quiz-fullscreen .main {
+      max-width: 860px;
+      padding: 36px 28px;
     }
 
     /* ==================== SIDEBAR ==================== */
@@ -91,9 +104,9 @@
       letter-spacing: 0.06em;
       padding: 3px 8px;
       border-radius: 999px;
-      background: var(--accent-soft);
-      color: #818cf8;
-      border: 1px solid rgba(99, 102, 241, 0.3);
+      background: var(--success-soft);
+      color: var(--success);
+      border: 1px solid rgba(16, 185, 129, 0.35);
     }
 
     .sidebar-section-header {
@@ -165,8 +178,19 @@
       border-top: 1px solid var(--border);
       padding-top: 14px;
       margin-top: 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
       font-size: 0.78rem;
       color: var(--text-secondary);
+    }
+
+    .backup-actions {
+      display: flex;
+      gap: 8px;
+    }
+
+    .sidebar-status-row {
       display: flex;
       justify-content: space-between;
       align-items: center;
@@ -294,12 +318,25 @@
       background: var(--bg-card-hover);
     }
 
+    .btn-success {
+      background: var(--success-soft);
+      color: var(--success);
+      border-color: rgba(16, 185, 129, 0.35);
+    }
+
+    .btn-success.selected,
+    .btn-success:hover {
+      background: var(--success);
+      color: #fff;
+    }
+
     .btn-danger {
       background: var(--danger-soft);
       color: var(--danger);
       border-color: rgba(239, 68, 68, 0.35);
     }
 
+    .btn-danger.selected,
     .btn-danger:hover {
       background: var(--danger);
       color: #fff;
@@ -583,7 +620,7 @@
       to { opacity: 1; transform: translateY(0); }
     }
 
-    /* ==================== QUIZ BUILDER & TEST RUNNER (MILESTONE 3) ==================== */
+    /* ==================== QUIZ BUILDER, RUNNER & REVIEW (MILESTONES 3 & 4) ==================== */
     .badge {
       display: inline-block;
       font-size: 0.72rem;
@@ -636,6 +673,7 @@
       margin-bottom: 10px;
       font-size: 0.84rem;
       color: var(--text-secondary);
+      gap: 10px;
     }
 
     .quiz-q-prompt {
@@ -668,11 +706,80 @@
       background: var(--accent-soft);
     }
 
+    .quiz-choice.correct {
+      border-color: var(--success);
+      background: var(--success-soft);
+    }
+
+    .quiz-choice.incorrect {
+      border-color: var(--danger);
+      background: var(--danger-soft);
+    }
+
     .quiz-choice input[type="radio"] {
       accent-color: var(--accent);
       width: 16px;
       height: 16px;
       cursor: pointer;
+    }
+
+    .score-banner {
+      background: var(--bg-card);
+      border: 1px solid var(--accent);
+      border-radius: var(--radius);
+      padding: 22px 26px;
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: center;
+      gap: 16px;
+      margin-bottom: 22px;
+      box-shadow: var(--shadow);
+    }
+
+    .score-big {
+      font-size: 2rem;
+      font-weight: 800;
+      color: var(--accent);
+      line-height: 1.2;
+      margin-top: 2px;
+    }
+
+    .user-answer-box {
+      background: var(--bg-input);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 12px 14px;
+      margin-top: 6px;
+      white-space: pre-wrap;
+      word-break: break-word;
+      font-size: 0.94rem;
+    }
+
+    .rubric-box {
+      background: var(--bg-input);
+      border-left: 3px solid var(--warning);
+      border-radius: 6px;
+      padding: 14px 16px;
+      margin-top: 14px;
+    }
+
+    .rubric-box h4 {
+      font-size: 0.82rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--warning);
+      margin-bottom: 8px;
+    }
+
+    .rubric-list {
+      padding-left: 20px;
+      color: var(--text-primary);
+      font-size: 0.92rem;
+    }
+
+    .rubric-list li {
+      margin-bottom: 5px;
     }
 
     .hidden {
@@ -706,7 +813,7 @@
         <div class="brand-badge">SF</div>
         <span>StudyForge</span>
       </div>
-      <span class="milestone-pill">Milestone 3</span>
+      <span class="milestone-pill">Complete</span>
     </div>
 
     <div class="sidebar-section-header">
@@ -717,11 +824,22 @@
     <ul class="set-list" id="setList"></ul>
 
     <div class="sidebar-footer">
-      <span class="storage-indicator">
-        <span class="status-dot"></span>
-        <span>localStorage Active</span>
-      </span>
-      <button type="button" class="btn btn-secondary btn-sm" id="resetDemoBtn" title="Restore default demo sets">Reset Demo</button>
+      <div class="backup-actions">
+        <button type="button" class="btn btn-secondary btn-sm" style="flex:1" id="exportJsonBtn" title="Download all sets as JSON backup">
+          Export JSON
+        </button>
+        <button type="button" class="btn btn-secondary btn-sm" style="flex:1" id="importJsonBtn" title="Restore sets from JSON backup">
+          Import JSON
+        </button>
+        <input type="file" id="importFileInput" accept=".json,application/json" class="hidden" />
+      </div>
+      <div class="sidebar-status-row">
+        <span class="storage-indicator">
+          <span class="status-dot"></span>
+          <span>localStorage Saved</span>
+        </span>
+        <button type="button" class="btn btn-secondary btn-sm" id="resetDemoBtn" title="Restore default demo sets">Reset Demo</button>
+      </div>
     </div>
   </aside>
 
@@ -738,7 +856,7 @@
 
     <!-- Active Set Workspace -->
     <div id="setWorkspace">
-      <div class="header-bar">
+      <div class="header-bar" id="workspaceHeaderBar">
         <div>
           <h1 class="set-title-display" id="activeSetTitle"></h1>
           <p class="set-desc-display" id="activeSetDesc"></p>
@@ -750,7 +868,7 @@
       </div>
 
       <!-- Summary Stat Cards -->
-      <div class="stats-grid">
+      <div class="stats-grid" id="workspaceStatsGrid">
         <div class="stat-card">
           <div class="stat-label">Flashcards in Set</div>
           <div class="stat-value" id="statFlashcardCount">0</div>
@@ -762,7 +880,7 @@
       </div>
 
       <!-- Mode Switcher Tabs -->
-      <div class="tabs">
+      <div class="tabs" id="workspaceTabs">
         <button type="button" class="tab-btn active" data-tab="flashcards" id="tabFlashcards">
           Flashcards <span class="tab-count" id="tabFcCount">0</span>
         </button>
@@ -771,7 +889,7 @@
         </button>
       </div>
 
-      <!-- Flashcards Tab Content (Milestone 2 Complete) -->
+      <!-- Flashcards Tab Content -->
       <section id="flashcardsSection">
         <div id="flashcardPlayerArea">
           <div class="flashcard-stage">
@@ -829,7 +947,7 @@
         </div>
       </section>
 
-      <!-- Quiz Tab Content (Milestone 3 Active) -->
+      <!-- Quiz Tab Content -->
       <section id="quizSection" class="hidden">
 
         <!-- Sub-view 1: Quiz Setup & Question Bank Builder -->
@@ -839,7 +957,7 @@
             <div>
               <h3 class="panel-title">Practice Quiz Runner</h3>
               <p style="color: var(--text-secondary); font-size: 0.9rem; margin-top: 3px;">
-                Answer every question uninterrupted first. In Milestone 4, submitting will open the full auto-graded &amp; self-evaluation review screen.
+                Answer every question uninterrupted first, then review Multiple Choice results and self-grade Short Answers against your criteria.
               </p>
             </div>
             <div style="display:flex; align-items:center; gap:14px;">
@@ -906,13 +1024,13 @@
           </div>
         </div>
 
-        <!-- Sub-view 2: Uninterrupted Quiz Runner -->
+        <!-- Sub-view 2: Uninterrupted Full-Window Quiz Runner -->
         <div id="quizTakeView" class="hidden">
           <div class="panel" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px;">
             <div>
-              <h3 class="panel-title">Quiz in Progress &mdash; <span id="quizAnsweredCounter">0 / 0</span> Answered</h3>
-              <p style="color:var(--text-secondary); font-size:0.86rem;">
-                Complete all questions below without right/wrong interruptions, then submit your attempt.
+              <h3 class="panel-title" id="quizTakeSetTitle">Quiz in Progress</h3>
+              <p style="color:var(--text-secondary); font-size:0.86rem; margin-top:2px;">
+                <strong style="color:var(--text-primary);" id="quizAnsweredCounter">0 / 0</strong> Answered &bull; Answer all questions below before viewing results.
               </p>
             </div>
             <button type="button" class="btn btn-secondary btn-sm" id="exitQuizBtn">Exit Quiz</button>
@@ -922,24 +1040,28 @@
 
           <div style="display:flex; justify-content:flex-end; gap:12px; margin-top:20px;">
             <button type="button" class="btn btn-primary" id="submitQuizBtn" style="padding:11px 22px; font-size:0.95rem;">
-              Submit Quiz Attempt
+              Submit &amp; Review Answers
             </button>
           </div>
         </div>
 
-        <!-- Sub-view 3: Milestone 3 Submission Confirmation (Full Review Screen in Milestone 4) -->
-        <div id="quizSubmittedStubView" class="hidden">
-          <div class="panel" style="border-color: var(--accent);">
-            <div class="panel-header">
-              <h3 class="panel-title" style="font-size:1.2rem;">Quiz Attempt Recorded!</h3>
-              <span class="milestone-pill">Review &amp; Rubric Grading in Milestone 4</span>
+        <!-- Sub-view 3: Auto-Graded & Rubric Self-Evaluation Review Screen (Milestone 4) -->
+        <div id="quizReviewView" class="hidden">
+          <div class="score-banner">
+            <div>
+              <div style="font-size:0.8rem; text-transform:uppercase; letter-spacing:0.06em; color:var(--text-secondary); font-weight:700;" id="quizReviewSetLabel">
+                Quiz Review &amp; Score
+              </div>
+              <div class="score-big" id="reviewScoreText">0 / 0 (0%)</div>
+              <div style="font-size:0.88rem; color:var(--text-secondary); margin-top:4px;" id="reviewScoreSubtext"></div>
             </div>
-            <p style="color:var(--text-secondary); font-size:0.94rem; margin-bottom:16px;" id="quizSubmittedSummary"></p>
             <div style="display:flex; gap:10px; flex-wrap:wrap;">
-              <button type="button" class="btn btn-primary" id="retakeFromStubBtn">Retake Quiz</button>
-              <button type="button" class="btn btn-secondary" id="backToBankFromStubBtn">Back to Question Bank</button>
+              <button type="button" class="btn btn-secondary" id="retakeQuizBtn">Retake Quiz</button>
+              <button type="button" class="btn btn-primary" id="doneReviewingBtn">Done Reviewing</button>
             </div>
           </div>
+
+          <div id="quizReviewQuestionsContainer"></div>
         </div>
 
       </section>
@@ -985,10 +1107,9 @@
   <div class="toast-container" id="toastContainer"></div>
 
   <script>
-    // ==================== STATE & PERSISTENCE (MILESTONE 1) ====================
+    // ==================== STATE & PERSISTENCE ====================
     const STORAGE_KEY = "studyforge_sets_v1";
 
-    // Pre-loaded sample sets for immediate testing
     const defaultSets = [
       {
         id: "set_demo_1",
@@ -1046,12 +1167,9 @@
       fcIndex: 0,
       fcFlipped: false,
       fcOrder: [],
-      quizSession: null        // { phase: 'taking' | 'submitted', questions: [], userAnswers: {} }
+      quizSession: null        // { phase: 'taking' | 'review', questions: [], userAnswers: {}, saGrades: {} }
     };
 
-    /**
-     * Load study sets from window.localStorage or seed with defaultSets.
-     */
     function loadState() {
       try {
         const raw = localStorage.getItem(STORAGE_KEY);
@@ -1076,9 +1194,6 @@
       renderAll();
     }
 
-    /**
-     * Synchronize current state.sets array to window.localStorage.
-     */
     function saveState() {
       try {
         localStorage.setItem(STORAGE_KEY, JSON.stringify(state.sets));
@@ -1106,7 +1221,7 @@
       }, 2600);
     }
 
-    // ==================== SET CRUD OPERATIONS ====================
+    // ==================== SET CRUD & JSON PORTABILITY ====================
     function selectSet(setId) {
       state.activeSetId = setId;
       state.quizSession = null;
@@ -1219,7 +1334,66 @@
       showToast("Demo study sets restored");
     });
 
-    // ==================== FLASHCARD MODULE (MILESTONE 2) ====================
+    // Export JSON Backup
+    document.getElementById("exportJsonBtn").addEventListener("click", () => {
+      try {
+        const payload = JSON.stringify(state.sets, null, 2);
+        const blob = new Blob([payload], { type: "application/json" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `studyforge-sets-${new Date().toISOString().slice(0, 10)}.json`;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        URL.revokeObjectURL(url);
+        showToast("Study sets exported to JSON");
+      } catch (err) {
+        console.error("Export failed:", err);
+        showToast("Failed to export JSON file");
+      }
+    });
+
+    // Import JSON Backup
+    document.getElementById("importJsonBtn").addEventListener("click", () => {
+      document.getElementById("importFileInput").click();
+    });
+
+    document.getElementById("importFileInput").addEventListener("change", (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = (ev) => {
+        try {
+          const imported = JSON.parse(ev.target.result);
+          if (!Array.isArray(imported)) {
+            throw new Error("Root JSON value must be an array of study sets.");
+          }
+          const sanitized = imported.map((item, index) => ({
+            id: typeof item.id === "string" ? item.id : generateId(`set_${index}`),
+            title: typeof item.title === "string" && item.title.trim() ? item.title.trim() : `Imported Set ${index + 1}`,
+            description: typeof item.description === "string" ? item.description : "",
+            flashcards: Array.isArray(item.flashcards) ? item.flashcards : [],
+            questions: Array.isArray(item.questions) ? item.questions : []
+          }));
+
+          state.sets = sanitized;
+          state.activeSetId = state.sets.length > 0 ? state.sets[0].id : null;
+          state.quizSession = null;
+          resetFlashcardDeck(false);
+          saveState();
+          renderAll();
+          showToast(`Imported ${sanitized.length} study ${sanitized.length === 1 ? "set" : "sets"}`);
+        } catch (err) {
+          console.error("Import error:", err);
+          showToast("Invalid JSON file format");
+        }
+      };
+      reader.readAsText(file);
+      e.target.value = "";
+    });
+
+    // ==================== FLASHCARD MODULE ====================
     function resetFlashcardDeck(shuffle = false) {
       const set = getActiveSet();
       state.fcIndex = 0;
@@ -1268,7 +1442,6 @@
       showToast("Deck shuffled");
     });
 
-    // Keyboard shortcuts: Space to flip, Left/Right arrows to navigate
     document.addEventListener("keydown", (e) => {
       if (state.activeTab !== "flashcards") return;
       const activeTag = document.activeElement ? document.activeElement.tagName : "";
@@ -1288,7 +1461,6 @@
       }
     });
 
-    // Add Flashcard Form Submission
     document.getElementById("addFlashcardForm").addEventListener("submit", (e) => {
       e.preventDefault();
       const set = getActiveSet();
@@ -1379,7 +1551,7 @@
       });
     }
 
-    // ==================== QUIZ BUILDER & TEST RUNNER (MILESTONE 3) ====================
+    // ==================== QUIZ BUILDER, FULL-WINDOW RUNNER & REVIEW ====================
     const qTypeSelect = document.getElementById("qTypeSelect");
     const mcBuilderFields = document.getElementById("mcBuilderFields");
     const saBuilderFields = document.getElementById("saBuilderFields");
@@ -1516,9 +1688,10 @@
       }
 
       state.quizSession = {
-        phase: "taking",
+        phase: "taking", // 'taking' | 'review'
         questions: qList,
-        userAnswers: {}
+        userAnswers: {},
+        saGrades: {}
       };
 
       renderQuizSection(set);
@@ -1526,7 +1699,7 @@
     }
 
     document.getElementById("startQuizBtn").addEventListener("click", startQuizSession);
-    document.getElementById("retakeFromStubBtn").addEventListener("click", startQuizSession);
+    document.getElementById("retakeQuizBtn").addEventListener("click", startQuizSession);
 
     document.getElementById("exitQuizBtn").addEventListener("click", () => {
       state.quizSession = null;
@@ -1534,14 +1707,14 @@
       showToast("Exited quiz attempt");
     });
 
-    document.getElementById("backToBankFromStubBtn").addEventListener("click", () => {
+    document.getElementById("doneReviewingBtn").addEventListener("click", () => {
       state.quizSession = null;
       renderQuizSection(getActiveSet());
     });
 
     document.getElementById("submitQuizBtn").addEventListener("click", () => {
       if (!state.quizSession) return;
-      state.quizSession.phase = "submitted";
+      state.quizSession.phase = "review";
       renderQuizSection(getActiveSet());
       window.scrollTo({ top: 0, behavior: "smooth" });
     });
@@ -1562,32 +1735,33 @@
     }
 
     function renderQuizSection(set) {
-      if (!set) return;
+      if (!set) {
+        document.body.classList.remove("quiz-fullscreen");
+        return;
+      }
+
       const setupView = document.getElementById("quizSetupView");
       const takeView = document.getElementById("quizTakeView");
-      const stubView = document.getElementById("quizSubmittedStubView");
+      const reviewView = document.getElementById("quizReviewView");
 
       setupView.classList.add("hidden");
       takeView.classList.add("hidden");
-      stubView.classList.add("hidden");
+      reviewView.classList.add("hidden");
+
+      const inActiveSession = Boolean(state.quizSession && state.activeTab === "quiz");
+      document.body.classList.toggle("quiz-fullscreen", inActiveSession);
 
       if (!state.quizSession) {
         setupView.classList.remove("hidden");
         renderQuizSetupView(set);
       } else if (state.quizSession.phase === "taking") {
         takeView.classList.remove("hidden");
+        document.getElementById("quizTakeSetTitle").textContent = `${set.title} — Quiz in Progress`;
         renderQuizTakeView();
       } else {
-        stubView.classList.remove("hidden");
-        const total = state.quizSession.questions.length;
-        let answered = 0;
-        state.quizSession.questions.forEach(q => {
-          const ans = state.quizSession.userAnswers[q.id];
-          if (q.type === "mc" && typeof ans === "number") answered++;
-          if (q.type === "sa" && typeof ans === "string" && ans.trim().length > 0) answered++;
-        });
-        document.getElementById("quizSubmittedSummary").textContent =
-          `You completed ${answered} of ${total} questions in "${set.title}". All responses are captured in session memory and ready for Milestone 4's side-by-side auto-grading and short-answer rubric evaluation screen.`;
+        reviewView.classList.remove("hidden");
+        document.getElementById("quizReviewSetLabel").textContent = `${set.title} — Quiz Review & Score`;
+        renderQuizReviewView();
       }
     }
 
@@ -1683,6 +1857,131 @@
       updateQuizAnsweredCounter();
     }
 
+    function renderQuizReviewView() {
+      const session = state.quizSession;
+      if (!session) return;
+
+      const container = document.getElementById("quizReviewQuestionsContainer");
+      container.innerHTML = "";
+
+      const totalQuestions = session.questions.length;
+      let earnedPoints = 0;
+      let ungradedSaCount = 0;
+
+      session.questions.forEach((q, idx) => {
+        const card = document.createElement("div");
+        card.className = "quiz-question-card";
+
+        if (q.type === "mc") {
+          const userChoice = session.userAnswers[q.id];
+          const isCorrect = userChoice === q.correctIndex;
+          if (isCorrect) earnedPoints++;
+
+          card.innerHTML = `
+            <div class="quiz-q-header">
+              <span>Question ${idx + 1} of ${totalQuestions} &bull; Multiple Choice</span>
+              <span style="font-weight:700; color:${isCorrect ? "var(--success)" : "var(--danger)"}">
+                ${isCorrect ? "✓ Correct" : "✗ Incorrect"}
+              </span>
+            </div>
+            <div class="quiz-q-prompt">${escapeHtml(q.prompt)}</div>
+          `;
+
+          q.options.forEach((opt, optIdx) => {
+            const choiceEl = document.createElement("div");
+            choiceEl.className = "quiz-choice";
+            choiceEl.style.cursor = "default";
+
+            let tag = "";
+            if (optIdx === q.correctIndex) {
+              choiceEl.classList.add("correct");
+              tag = `<strong style="margin-left:auto; color:var(--success); font-size:0.8rem;">Correct Answer</strong>`;
+            } else if (optIdx === userChoice) {
+              choiceEl.classList.add("incorrect");
+              tag = `<strong style="margin-left:auto; color:var(--danger); font-size:0.8rem;">Your Answer</strong>`;
+            }
+
+            choiceEl.innerHTML = `<span>${escapeHtml(opt)}</span>${tag}`;
+            card.appendChild(choiceEl);
+          });
+
+          if (userChoice === undefined) {
+            const note = document.createElement("div");
+            note.style.cssText = "color:var(--danger); font-size:0.85rem; margin-top:6px;";
+            note.textContent = "No option was selected.";
+            card.appendChild(note);
+          }
+        } else {
+          // Short Answer Self-Evaluation Card
+          const grade = session.saGrades[q.id];
+          if (grade === true) earnedPoints++;
+          if (grade === undefined) ungradedSaCount++;
+
+          const statusHtml = grade === true
+            ? `<span style="font-weight:700; color:var(--success);">✓ Marked Correct</span>`
+            : grade === false
+              ? `<span style="font-weight:700; color:var(--danger);">✗ Marked Needs Review</span>`
+              : `<span style="font-weight:700; color:var(--warning);">Pending Self-Evaluation</span>`;
+
+          const userAnsText = (session.userAnswers[q.id] || "").trim();
+
+          card.innerHTML = `
+            <div class="quiz-q-header">
+              <span>Question ${idx + 1} of ${totalQuestions} &bull; Short Answer</span>
+              ${statusHtml}
+            </div>
+            <div class="quiz-q-prompt">${escapeHtml(q.prompt)}</div>
+
+            <div style="font-size:0.8rem; font-weight:700; color:var(--text-secondary); text-transform:uppercase; letter-spacing:0.05em;">
+              Your Written Response:
+            </div>
+            <div class="user-answer-box">${userAnsText ? escapeHtml(userAnsText) : "<em style='color:var(--text-secondary)'>No response entered.</em>"}</div>
+
+            <div class="rubric-box">
+              <h4>Grading Criteria — Evaluate Your Response Against These Points:</h4>
+              <ul class="rubric-list">
+                ${q.criteria.map(c => `<li>${escapeHtml(c)}</li>`).join("")}
+              </ul>
+              ${q.sampleAnswer ? `
+                <div style="margin-top:12px; padding-top:10px; border-top:1px solid var(--border); font-size:0.88rem;">
+                  <strong style="color:var(--text-secondary);">Reference / Sample Answer:</strong>
+                  <div style="margin-top:4px; color:var(--text-primary); white-space:pre-wrap;">${escapeHtml(q.sampleAnswer)}</div>
+                </div>
+              ` : ""}
+            </div>
+
+            <div style="display:flex; align-items:center; gap:10px; margin-top:16px; flex-wrap:wrap;">
+              <span style="font-size:0.88rem; color:var(--text-secondary); font-weight:600;">Self-Evaluation:</span>
+              <button type="button" class="btn btn-success btn-sm ${grade === true ? "selected" : ""}" data-grade-yes="${q.id}">
+                ✓ Met Criteria (Correct)
+              </button>
+              <button type="button" class="btn btn-danger btn-sm ${grade === false ? "selected" : ""}" data-grade-no="${q.id}">
+                ✗ Missed Criteria (Incorrect)
+              </button>
+            </div>
+          `;
+
+          card.querySelector("[data-grade-yes]").addEventListener("click", () => {
+            session.saGrades[q.id] = true;
+            renderQuizReviewView();
+          });
+
+          card.querySelector("[data-grade-no]").addEventListener("click", () => {
+            session.saGrades[q.id] = false;
+            renderQuizReviewView();
+          });
+        }
+
+        container.appendChild(card);
+      });
+
+      const pct = totalQuestions > 0 ? Math.round((earnedPoints / totalQuestions) * 100) : 0;
+      document.getElementById("reviewScoreText").textContent = `${earnedPoints} / ${totalQuestions} (${pct}%)`;
+      document.getElementById("reviewScoreSubtext").textContent = ungradedSaCount > 0
+        ? `${ungradedSaCount} short-answer ${ungradedSaCount === 1 ? "question awaits" : "questions await"} your self-evaluation below.`
+        : "All questions graded!";
+    }
+
     // ==================== TAB NAVIGATION ====================
     document.querySelectorAll(".tab-btn").forEach(btn => {
       btn.addEventListener("click", () => {
@@ -1697,6 +1996,9 @@
       document.getElementById("tabQuiz").classList.toggle("active", !isFc);
       document.getElementById("flashcardsSection").classList.toggle("hidden", !isFc);
       document.getElementById("quizSection").classList.toggle("hidden", isFc);
+
+      const inActiveSession = Boolean(state.quizSession && !isFc);
+      document.body.classList.toggle("quiz-fullscreen", inActiveSession);
     }
 
     // ==================== RENDER FUNCTIONS ====================
@@ -1724,6 +2026,7 @@
       const workspace = document.getElementById("setWorkspace");
 
       if (!set) {
+        document.body.classList.remove("quiz-fullscreen");
         emptyView.classList.remove("hidden");
         workspace.classList.add("hidden");
         return;
@@ -1740,12 +2043,8 @@
       document.getElementById("tabFcCount").textContent = set.flashcards.length;
       document.getElementById("tabQuizCount").textContent = set.questions.length;
 
-      // Render Milestone 2 Flashcards Module
       renderFlashcardsSection(set);
-
-      // Render Milestone 3 Quiz Module
       renderQuizSection(set);
-
       renderTabs();
     }
 
