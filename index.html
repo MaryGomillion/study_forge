@@ -838,7 +838,6 @@
           <span class="status-dot"></span>
           <span>localStorage Saved</span>
         </span>
-        <button type="button" class="btn btn-secondary btn-sm" id="resetDemoBtn" title="Restore default demo sets">Reset Demo</button>
       </div>
     </div>
   </aside>
@@ -1323,16 +1322,6 @@
       showToast(`Deleted "${deletedTitle}"`);
     });
 
-    // Reset Demo Data Button
-    document.getElementById("resetDemoBtn").addEventListener("click", () => {
-      state.sets = JSON.parse(JSON.stringify(defaultSets));
-      state.activeSetId = state.sets[0].id;
-      state.quizSession = null;
-      resetFlashcardDeck(false);
-      saveState();
-      renderAll();
-      showToast("Demo study sets restored");
-    });
 
     // Export JSON Backup
     document.getElementById("exportJsonBtn").addEventListener("click", () => {
@@ -1920,7 +1909,7 @@
           const statusHtml = grade === true
             ? `<span style="font-weight:700; color:var(--success);">✓ Marked Correct</span>`
             : grade === false
-              ? `<span style="font-weight:700; color:var(--danger);">✗ Marked Needs Review</span>`
+              ? `<span style="font-weight:700; color:var(--danger);">✗ Marked Incorrect</span>`
               : `<span style="font-weight:700; color:var(--warning);">Pending Self-Evaluation</span>`;
 
           const userAnsText = (session.userAnswers[q.id] || "").trim();
