@@ -625,6 +625,56 @@
     </div>
   </aside>
 
+  <!-- ==================== MAIN WORKSPACE ==================== -->
+  <main class="main" id="mainContainer">
+    <!-- Empty State when no sets exist -->
+    <div id="noSetSelectedView" class="empty-state hidden">
+      <h2 style="color: var(--text-primary); margin-bottom: 8px;">No Study Sets Found</h2>
+      <p style="margin-bottom: 18px; max-width: 440px; margin-inline: auto;">
+        Create your first study set to start organizing flashcards and custom self-graded quizzes.
+      </p>
+      <button type="button" class="btn btn-primary" id="emptyCreateSetBtn">+ Create First Study Set</button>
+    </div>
+
+    <!-- Active Set Workspace -->
+    <div id="setWorkspace">
+      <div class="header-bar">
+        <div>
+          <h1 class="set-title-display" id="activeSetTitle"></h1>
+          <p class="set-desc-display" id="activeSetDesc"></p>
+        </div>
+        <div style="display:flex; gap:8px;">
+          <button type="button" class="btn btn-secondary btn-sm" id="openEditSetBtn">Rename / Edit Set</button>
+          <button type="button" class="btn btn-danger btn-sm" id="openDeleteSetBtn">Delete Set</button>
+        </div>
+      </div>
+
+      <!-- Summary Stat Cards -->
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-label">Flashcards in Set</div>
+          <div class="stat-value" id="statFlashcardCount">0</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Quiz Questions in Set</div>
+          <div class="stat-value" id="statQuizCount">0</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Storage Engine</div>
+          <div class="stat-value" style="font-size: 1.15rem; color: var(--success); margin-top: 8px;">Browser LocalStorage</div>
+        </div>
+      </div>
+
+      <!-- Separated Mode Tabs -->
+      <div class="tabs">
+        <button type="button" class="tab-btn active" data-tab="flashcards" id="tabFlashcards">
+          Flashcards <span class="tab-count" id="tabFcCount">0</span>
+        </button>
+        <button type="button" class="tab-btn" data-tab="quiz" id="tabQuiz">
+          Quiz <span class="tab-count" id="tabQuizCount">0</span>
+        </button>
+      </div>
+
       <!-- Flashcards Tab Content (Milestone 2 Active) -->
       <section id="flashcardsSection">
         <!-- Interactive 3D Flashcard Player -->
