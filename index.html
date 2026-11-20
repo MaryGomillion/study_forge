@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>StudyForge — Milestone 2: Flashcard Module &amp; Interactive Player</title>
+  <title>StudyForge — Milestone 3: Quiz Builder &amp; Test Runner</title>
   <style>
     /* ==================== CSS DESIGN TOKENS ==================== */
     :root {
@@ -19,9 +19,11 @@
       --accent-hover: #4f46e5;
       --accent-soft: rgba(99, 102, 241, 0.14);
       --success: #10b981;
+      --success-soft: rgba(16, 185, 129, 0.14);
       --danger: #ef4444;
       --danger-soft: rgba(239, 68, 68, 0.14);
       --warning: #f59e0b;
+      --warning-soft: rgba(245, 158, 11, 0.14);
       --radius: 10px;
       --shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
     }
@@ -308,6 +310,22 @@
       font-size: 0.8rem;
     }
 
+    .btn-icon {
+      background: none;
+      border: none;
+      color: var(--text-secondary);
+      cursor: pointer;
+      padding: 4px 8px;
+      border-radius: 6px;
+      font-size: 1.05rem;
+      line-height: 1;
+    }
+
+    .btn-icon:hover {
+      background: rgba(255, 255, 255, 0.08);
+      color: var(--text-primary);
+    }
+
     /* ==================== FLASHCARD 3D STAGE & CONTROLS ==================== */
     .flashcard-stage {
       perspective: 1100px;
@@ -467,63 +485,23 @@
       color: var(--text-secondary);
       border: 1px dashed var(--border);
       border-radius: var(--radius);
-      background: rgba(28, 32, 43, 0.4);
+      background: rgba(28, 32, 43, 0.45);
     }
 
-    /* ==================== CUSTOM MODALS ==================== */
-    .modal-backdrop {
-      position: fixed;
-      inset: 0;
-      background: rgba(8, 10, 15, 0.75);
-      backdrop-filter: blur(3px);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 20px;
-      z-index: 1000;
-    }
-
-    .modal-card {
-      background: var(--bg-card);
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      box-shadow: var(--shadow);
-      width: 100%;
-      max-width: 460px;
-      padding: 24px;
-      animation: modalFadeIn 0.16s ease-out;
-    }
-
-    @keyframes modalFadeIn {
-      from {
-        opacity: 0;
-        transform: translateY(8px) scale(0.98);
-      }
-      to {
-        opacity: 1;
-        transform: translateY(0) scale(1);
-      }
-    }
-
-    .modal-title {
-      font-size: 1.15rem;
-      font-weight: 700;
-      margin-bottom: 14px;
-    }
-
+    /* ==================== FORMS & MODALS ==================== */
     .form-group {
-      margin-bottom: 14px;
+      margin-bottom: 15px;
     }
 
     label {
       display: block;
-      font-size: 0.83rem;
+      font-size: 0.84rem;
       font-weight: 600;
       color: var(--text-secondary);
       margin-bottom: 6px;
     }
 
-    input[type="text"], textarea {
+    input[type="text"], textarea, select {
       width: 100%;
       background: var(--bg-input);
       border: 1px solid var(--border);
@@ -536,13 +514,39 @@
       transition: border-color 0.15s;
     }
 
-    input[type="text"]:focus, textarea:focus {
+    input[type="text"]:focus, textarea:focus, select:focus {
       border-color: var(--accent);
     }
 
     textarea {
       resize: vertical;
       min-height: 76px;
+    }
+
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.65);
+      display: grid;
+      place-items: center;
+      padding: 16px;
+      z-index: 100;
+    }
+
+    .modal-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      box-shadow: var(--shadow);
+      width: 100%;
+      max-width: 460px;
+      padding: 24px;
+    }
+
+    .modal-title {
+      font-size: 1.15rem;
+      font-weight: 700;
+      margin-bottom: 16px;
     }
 
     .modal-actions {
@@ -555,24 +559,120 @@
     /* ==================== TOAST NOTIFICATION ==================== */
     .toast-container {
       position: fixed;
-      bottom: 22px;
-      right: 22px;
-      z-index: 1100;
+      bottom: 20px;
+      right: 20px;
       display: flex;
       flex-direction: column;
       gap: 8px;
+      z-index: 200;
     }
 
     .toast {
       background: var(--bg-card);
       border: 1px solid var(--accent);
       color: var(--text-primary);
-      padding: 11px 16px;
+      padding: 10px 16px;
       border-radius: 8px;
-      box-shadow: var(--shadow);
       font-size: 0.88rem;
+      box-shadow: var(--shadow);
+      animation: fadeIn 0.2s ease;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(6px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ==================== QUIZ BUILDER & TEST RUNNER (MILESTONE 3) ==================== */
+    .badge {
+      display: inline-block;
+      font-size: 0.72rem;
+      font-weight: 700;
+      padding: 3px 9px;
+      border-radius: 999px;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    .badge-mc {
+      background: var(--accent-soft);
+      color: #818cf8;
+      border: 1px solid rgba(99, 102, 241, 0.3);
+    }
+
+    .badge-sa {
+      background: var(--warning-soft);
+      color: var(--warning);
+      border: 1px solid rgba(245, 158, 11, 0.3);
+    }
+
+    .mc-option-builder {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 8px;
+    }
+
+    .mc-option-builder input[type="radio"] {
+      accent-color: var(--accent);
+      width: 17px;
+      height: 17px;
+      cursor: pointer;
+      flex-shrink: 0;
+    }
+
+    .quiz-question-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 22px;
+      margin-bottom: 16px;
+    }
+
+    .quiz-q-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+      font-size: 0.84rem;
+      color: var(--text-secondary);
+    }
+
+    .quiz-q-prompt {
+      font-size: 1.06rem;
       font-weight: 600;
-      animation: modalFadeIn 0.18s ease-out;
+      margin-bottom: 16px;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+
+    .quiz-choice {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 11px 14px;
+      border: 1px solid var(--border);
+      background: var(--bg-input);
+      border-radius: 8px;
+      margin-bottom: 8px;
+      cursor: pointer;
+      transition: border-color 0.15s, background 0.15s;
+    }
+
+    .quiz-choice:hover {
+      border-color: var(--accent);
+    }
+
+    .quiz-choice.selected {
+      border-color: var(--accent);
+      background: var(--accent-soft);
+    }
+
+    .quiz-choice input[type="radio"] {
+      accent-color: var(--accent);
+      width: 16px;
+      height: 16px;
+      cursor: pointer;
     }
 
     .hidden {
@@ -606,12 +706,12 @@
         <div class="brand-badge">SF</div>
         <span>StudyForge</span>
       </div>
-      <span class="milestone-pill">Milestone 2</span>
+      <span class="milestone-pill">Milestone 3</span>
     </div>
 
     <div class="sidebar-section-header">
       <span>Study Sets</span>
-      <button class="btn btn-primary btn-sm" id="openCreateSetBtn">+ New Set</button>
+      <button type="button" class="btn btn-primary btn-sm" id="openCreateSetBtn">+ New Set</button>
     </div>
 
     <ul class="set-list" id="setList"></ul>
@@ -621,7 +721,7 @@
         <span class="status-dot"></span>
         <span>localStorage Active</span>
       </span>
-      <button class="btn btn-secondary btn-sm" id="resetDemoBtn" title="Restore default demo sets">Reset Demo</button>
+      <button type="button" class="btn btn-secondary btn-sm" id="resetDemoBtn" title="Restore default demo sets">Reset Demo</button>
     </div>
   </aside>
 
@@ -659,13 +759,9 @@
           <div class="stat-label">Quiz Questions in Set</div>
           <div class="stat-value" id="statQuizCount">0</div>
         </div>
-        <div class="stat-card">
-          <div class="stat-label">Storage Engine</div>
-          <div class="stat-value" style="font-size: 1.15rem; color: var(--success); margin-top: 8px;">Browser LocalStorage</div>
-        </div>
       </div>
 
-      <!-- Separated Mode Tabs -->
+      <!-- Mode Switcher Tabs -->
       <div class="tabs">
         <button type="button" class="tab-btn active" data-tab="flashcards" id="tabFlashcards">
           Flashcards <span class="tab-count" id="tabFcCount">0</span>
@@ -675,14 +771,13 @@
         </button>
       </div>
 
-      <!-- Flashcards Tab Content (Milestone 2 Active) -->
+      <!-- Flashcards Tab Content (Milestone 2 Complete) -->
       <section id="flashcardsSection">
-        <!-- Interactive 3D Flashcard Player -->
         <div id="flashcardPlayerArea">
           <div class="flashcard-stage">
             <div class="flashcard" id="flashcardEl" title="Click or press Space to flip">
               <div class="flashcard-face front">
-                <span class="card-side-badge">Front (Click or Space to flip)</span>
+                <span class="card-side-badge">Front &bull; Click or Press Space to Flip</span>
                 <div class="flashcard-text" id="fcFrontText"></div>
               </div>
               <div class="flashcard-face back">
@@ -694,16 +789,15 @@
 
           <div class="flashcard-controls">
             <button type="button" class="btn btn-secondary" id="prevCardBtn">&larr; Prev</button>
+            <button type="button" class="btn btn-secondary" id="flipCardBtn">Flip (Space)</button>
             <span class="card-counter" id="cardCounter">1 / 1</span>
             <button type="button" class="btn btn-secondary" id="nextCardBtn">Next &rarr;</button>
-            <button type="button" class="btn btn-secondary btn-sm" id="flipCardBtn">Flip (Space)</button>
             <button type="button" class="btn btn-secondary btn-sm" id="shuffleCardsBtn">Shuffle Deck</button>
           </div>
         </div>
 
-        <div id="flashcardEmptyState" class="empty-state hidden" style="margin-bottom: 24px;">
-          <h3 style="color: var(--text-primary); margin-bottom: 6px;">No Flashcards in This Set</h3>
-          <p>Add your first flashcard below to start practicing with the 3D flip player.</p>
+        <div id="flashcardEmptyState" class="empty-state hidden" style="margin-bottom: 22px;">
+          <p>No flashcards in this set yet. Use the form below to create your first card!</p>
         </div>
 
         <!-- Add Flashcard Form -->
@@ -735,18 +829,119 @@
         </div>
       </section>
 
-      <!-- Quiz Tab Content (Milestone 1 Foundation) -->
+      <!-- Quiz Tab Content (Milestone 3 Active) -->
       <section id="quizSection" class="hidden">
-        <div class="panel">
-          <div class="panel-header">
-            <h3 class="panel-title">Quiz Question Bank Foundation</h3>
-            <span class="milestone-pill">Builder &amp; Runner in Milestone 3 &amp; 4</span>
+
+        <!-- Sub-view 1: Quiz Setup & Question Bank Builder -->
+        <div id="quizSetupView">
+          <!-- Start Quiz Launcher Card -->
+          <div class="panel" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:14px;">
+            <div>
+              <h3 class="panel-title">Practice Quiz Runner</h3>
+              <p style="color: var(--text-secondary); font-size: 0.9rem; margin-top: 3px;">
+                Answer every question uninterrupted first. In Milestone 4, submitting will open the full auto-graded &amp; self-evaluation review screen.
+              </p>
+            </div>
+            <div style="display:flex; align-items:center; gap:14px;">
+              <label style="display:inline-flex; align-items:center; gap:6px; margin:0; cursor:pointer; color:var(--text-primary);">
+                <input type="checkbox" id="shuffleQuizCheck" style="accent-color:var(--accent); width:16px; height:16px;" />
+                Shuffle order
+              </label>
+              <button type="button" class="btn btn-primary" id="startQuizBtn">Start Quiz</button>
+            </div>
           </div>
-          <p style="color: var(--text-secondary); font-size: 0.92rem;">
-            This study set currently stores the following quiz items in <code>localStorage</code>. In <strong>Milestones 3 &amp; 4</strong>, we will add the Multiple Choice &amp; Short Answer question builder, uninterrupted quiz runner, and self-grading rubric screen here.
-          </p>
-          <div class="preview-list" id="quizPreviewList"></div>
+
+          <!-- Add Quiz Question Form -->
+          <div class="panel">
+            <div class="panel-header">
+              <h3 class="panel-title">Add Quiz Question</h3>
+            </div>
+            <form id="addQuestionForm">
+              <div class="form-row">
+                <div class="form-group">
+                  <label for="qTypeSelect">Question Format</label>
+                  <select id="qTypeSelect">
+                    <option value="mc">Multiple Choice</option>
+                    <option value="sa">Short Answer (Criteria Self-Graded)</option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label for="qPromptInput">Question Prompt *</label>
+                <textarea id="qPromptInput" placeholder="Enter your exam question..." required></textarea>
+              </div>
+
+              <!-- Multiple Choice Builder -->
+              <div id="mcBuilderFields">
+                <label>Answer Choices (select the radio button next to the correct option)</label>
+                <div id="mcOptionsContainer"></div>
+                <button type="button" class="btn btn-secondary btn-sm" id="addMcOptionBtn" style="margin-top:4px;">+ Add Choice</button>
+              </div>
+
+              <!-- Short Answer Rubric Builder -->
+              <div id="saBuilderFields" class="hidden">
+                <div class="form-group">
+                  <label for="saCriteriaInput">Grading Criteria (one criterion per line) *</label>
+                  <textarea id="saCriteriaInput" placeholder="Mentions conservation of momentum&#10;Distinguishes elastic vs. inelastic collisions&#10;Includes proper units"></textarea>
+                </div>
+                <div class="form-group">
+                  <label for="saSampleInput">Reference / Sample Answer (Optional)</label>
+                  <textarea id="saSampleInput" placeholder="Optional ideal answer to compare against after submitting..."></textarea>
+                </div>
+              </div>
+
+              <div style="margin-top: 16px;">
+                <button type="submit" class="btn btn-primary">+ Save Question to Bank</button>
+              </div>
+            </form>
+          </div>
+
+          <!-- Question Bank Management List -->
+          <div class="panel">
+            <div class="panel-header">
+              <h3 class="panel-title">Questions in This Set (<span id="quizManageCount">0</span>)</h3>
+            </div>
+            <div class="preview-list" id="quizManageList"></div>
+          </div>
         </div>
+
+        <!-- Sub-view 2: Uninterrupted Quiz Runner -->
+        <div id="quizTakeView" class="hidden">
+          <div class="panel" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px;">
+            <div>
+              <h3 class="panel-title">Quiz in Progress &mdash; <span id="quizAnsweredCounter">0 / 0</span> Answered</h3>
+              <p style="color:var(--text-secondary); font-size:0.86rem;">
+                Complete all questions below without right/wrong interruptions, then submit your attempt.
+              </p>
+            </div>
+            <button type="button" class="btn btn-secondary btn-sm" id="exitQuizBtn">Exit Quiz</button>
+          </div>
+
+          <div id="quizTakeQuestionsContainer"></div>
+
+          <div style="display:flex; justify-content:flex-end; gap:12px; margin-top:20px;">
+            <button type="button" class="btn btn-primary" id="submitQuizBtn" style="padding:11px 22px; font-size:0.95rem;">
+              Submit Quiz Attempt
+            </button>
+          </div>
+        </div>
+
+        <!-- Sub-view 3: Milestone 3 Submission Confirmation (Full Review Screen in Milestone 4) -->
+        <div id="quizSubmittedStubView" class="hidden">
+          <div class="panel" style="border-color: var(--accent);">
+            <div class="panel-header">
+              <h3 class="panel-title" style="font-size:1.2rem;">Quiz Attempt Recorded!</h3>
+              <span class="milestone-pill">Review &amp; Rubric Grading in Milestone 4</span>
+            </div>
+            <p style="color:var(--text-secondary); font-size:0.94rem; margin-bottom:16px;" id="quizSubmittedSummary"></p>
+            <div style="display:flex; gap:10px; flex-wrap:wrap;">
+              <button type="button" class="btn btn-primary" id="retakeFromStubBtn">Retake Quiz</button>
+              <button type="button" class="btn btn-secondary" id="backToBankFromStubBtn">Back to Question Bank</button>
+            </div>
+          </div>
+        </div>
+
       </section>
     </div>
   </main>
@@ -793,7 +988,7 @@
     // ==================== STATE & PERSISTENCE (MILESTONE 1) ====================
     const STORAGE_KEY = "studyforge_sets_v1";
 
-    // Pre-loaded sample sets for immediate Milestone 1 testing
+    // Pre-loaded sample sets for immediate testing
     const defaultSets = [
       {
         id: "set_demo_1",
@@ -850,7 +1045,8 @@
       modalMode: "create",     // 'create' | 'edit'
       fcIndex: 0,
       fcFlipped: false,
-      fcOrder: []
+      fcOrder: [],
+      quizSession: null        // { phase: 'taking' | 'submitted', questions: [], userAnswers: {} }
     };
 
     /**
@@ -913,6 +1109,7 @@
     // ==================== SET CRUD OPERATIONS ====================
     function selectSet(setId) {
       state.activeSetId = setId;
+      state.quizSession = null;
       resetFlashcardDeck(false);
       renderAll();
     }
@@ -965,6 +1162,7 @@
         };
         state.sets.push(newSet);
         state.activeSetId = newSet.id;
+        state.quizSession = null;
         resetFlashcardDeck(false);
         saveState();
         renderAll();
@@ -1002,6 +1200,7 @@
       const deletedTitle = current.title;
       state.sets = state.sets.filter(s => s.id !== current.id);
       state.activeSetId = state.sets.length > 0 ? state.sets[0].id : null;
+      state.quizSession = null;
       resetFlashcardDeck(false);
       saveState();
       document.getElementById("deleteConfirmModal").classList.add("hidden");
@@ -1013,6 +1212,7 @@
     document.getElementById("resetDemoBtn").addEventListener("click", () => {
       state.sets = JSON.parse(JSON.stringify(defaultSets));
       state.activeSetId = state.sets[0].id;
+      state.quizSession = null;
       resetFlashcardDeck(false);
       saveState();
       renderAll();
@@ -1179,6 +1379,310 @@
       });
     }
 
+    // ==================== QUIZ BUILDER & TEST RUNNER (MILESTONE 3) ====================
+    const qTypeSelect = document.getElementById("qTypeSelect");
+    const mcBuilderFields = document.getElementById("mcBuilderFields");
+    const saBuilderFields = document.getElementById("saBuilderFields");
+    const mcOptionsContainer = document.getElementById("mcOptionsContainer");
+
+    function initMcOptionsBuilder(count = 4) {
+      mcOptionsContainer.innerHTML = "";
+      for (let i = 0; i < count; i++) {
+        appendMcOptionRow(i === 0);
+      }
+    }
+
+    function appendMcOptionRow(checked = false) {
+      const idx = mcOptionsContainer.children.length;
+      const div = document.createElement("div");
+      div.className = "mc-option-builder";
+      div.innerHTML = `
+        <input type="radio" name="correctMcOption" ${checked ? "checked" : ""} title="Mark as correct answer" />
+        <input type="text" class="mc-opt-text" placeholder="Choice ${idx + 1}" />
+        <button type="button" class="btn-icon remove-opt-btn" title="Remove choice">&times;</button>
+      `;
+      div.querySelector(".remove-opt-btn").addEventListener("click", () => {
+        if (mcOptionsContainer.children.length <= 2) {
+          showToast("Multiple choice questions require at least 2 options");
+          return;
+        }
+        const wasChecked = div.querySelector('input[type="radio"]').checked;
+        div.remove();
+        if (wasChecked && mcOptionsContainer.firstElementChild) {
+          mcOptionsContainer.firstElementChild.querySelector('input[type="radio"]').checked = true;
+        }
+      });
+      mcOptionsContainer.appendChild(div);
+    }
+
+    document.getElementById("addMcOptionBtn").addEventListener("click", () => appendMcOptionRow(false));
+
+    qTypeSelect.addEventListener("change", () => {
+      const isMc = qTypeSelect.value === "mc";
+      mcBuilderFields.classList.toggle("hidden", !isMc);
+      saBuilderFields.classList.toggle("hidden", isMc);
+    });
+
+    document.getElementById("addQuestionForm").addEventListener("submit", (e) => {
+      e.preventDefault();
+      const set = getActiveSet();
+      if (!set) return;
+
+      const type = qTypeSelect.value;
+      const promptText = document.getElementById("qPromptInput").value.trim();
+      if (!promptText) return;
+
+      if (type === "mc") {
+        const rows = Array.from(mcOptionsContainer.children);
+        const options = [];
+        let correctIndex = 0;
+
+        rows.forEach((row) => {
+          const text = row.querySelector(".mc-opt-text").value.trim();
+          const isChecked = row.querySelector('input[type="radio"]').checked;
+          if (text) {
+            if (isChecked) correctIndex = options.length;
+            options.push(text);
+          }
+        });
+
+        if (options.length < 2) {
+          showToast("Enter at least 2 non-empty choices");
+          return;
+        }
+
+        set.questions.push({
+          id: generateId("q"),
+          type: "mc",
+          prompt: promptText,
+          options,
+          correctIndex
+        });
+
+        initMcOptionsBuilder(4);
+      } else {
+        const rawCriteria = document.getElementById("saCriteriaInput").value
+          .split("\n")
+          .map(line => line.replace(/^[-*•]\s*/, "").trim())
+          .filter(Boolean);
+
+        if (rawCriteria.length === 0) {
+          showToast("Enter at least one grading criterion");
+          return;
+        }
+
+        const sampleAnswer = document.getElementById("saSampleInput").value.trim();
+
+        set.questions.push({
+          id: generateId("q"),
+          type: "sa",
+          prompt: promptText,
+          criteria: rawCriteria,
+          sampleAnswer
+        });
+
+        document.getElementById("saCriteriaInput").value = "";
+        document.getElementById("saSampleInput").value = "";
+      }
+
+      document.getElementById("qPromptInput").value = "";
+      saveState();
+      renderAll();
+      showToast("Question added to quiz bank");
+    });
+
+    function deleteQuizQuestion(qId) {
+      const set = getActiveSet();
+      if (!set) return;
+      set.questions = set.questions.filter(q => q.id !== qId);
+      saveState();
+      renderAll();
+      showToast("Question deleted");
+    }
+
+    function startQuizSession() {
+      const set = getActiveSet();
+      if (!set || set.questions.length === 0) {
+        showToast("Add at least one quiz question first");
+        return;
+      }
+
+      const qList = set.questions.map(q => JSON.parse(JSON.stringify(q)));
+      if (document.getElementById("shuffleQuizCheck").checked) {
+        for (let i = qList.length - 1; i > 0; i--) {
+          const j = Math.floor(Math.random() * (i + 1));
+          [qList[i], qList[j]] = [qList[j], qList[i]];
+        }
+      }
+
+      state.quizSession = {
+        phase: "taking",
+        questions: qList,
+        userAnswers: {}
+      };
+
+      renderQuizSection(set);
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+
+    document.getElementById("startQuizBtn").addEventListener("click", startQuizSession);
+    document.getElementById("retakeFromStubBtn").addEventListener("click", startQuizSession);
+
+    document.getElementById("exitQuizBtn").addEventListener("click", () => {
+      state.quizSession = null;
+      renderQuizSection(getActiveSet());
+      showToast("Exited quiz attempt");
+    });
+
+    document.getElementById("backToBankFromStubBtn").addEventListener("click", () => {
+      state.quizSession = null;
+      renderQuizSection(getActiveSet());
+    });
+
+    document.getElementById("submitQuizBtn").addEventListener("click", () => {
+      if (!state.quizSession) return;
+      state.quizSession.phase = "submitted";
+      renderQuizSection(getActiveSet());
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    });
+
+    function updateQuizAnsweredCounter() {
+      const session = state.quizSession;
+      if (!session) return;
+      let answered = 0;
+      session.questions.forEach(q => {
+        const ans = session.userAnswers[q.id];
+        if (q.type === "mc" && typeof ans === "number") answered++;
+        if (q.type === "sa" && typeof ans === "string" && ans.trim().length > 0) answered++;
+      });
+      const counterEl = document.getElementById("quizAnsweredCounter");
+      if (counterEl) {
+        counterEl.textContent = `${answered} / ${session.questions.length}`;
+      }
+    }
+
+    function renderQuizSection(set) {
+      if (!set) return;
+      const setupView = document.getElementById("quizSetupView");
+      const takeView = document.getElementById("quizTakeView");
+      const stubView = document.getElementById("quizSubmittedStubView");
+
+      setupView.classList.add("hidden");
+      takeView.classList.add("hidden");
+      stubView.classList.add("hidden");
+
+      if (!state.quizSession) {
+        setupView.classList.remove("hidden");
+        renderQuizSetupView(set);
+      } else if (state.quizSession.phase === "taking") {
+        takeView.classList.remove("hidden");
+        renderQuizTakeView();
+      } else {
+        stubView.classList.remove("hidden");
+        const total = state.quizSession.questions.length;
+        let answered = 0;
+        state.quizSession.questions.forEach(q => {
+          const ans = state.quizSession.userAnswers[q.id];
+          if (q.type === "mc" && typeof ans === "number") answered++;
+          if (q.type === "sa" && typeof ans === "string" && ans.trim().length > 0) answered++;
+        });
+        document.getElementById("quizSubmittedSummary").textContent =
+          `You completed ${answered} of ${total} questions in "${set.title}". All responses are captured in session memory and ready for Milestone 4's side-by-side auto-grading and short-answer rubric evaluation screen.`;
+      }
+    }
+
+    function renderQuizSetupView(set) {
+      document.getElementById("quizManageCount").textContent = set.questions.length;
+      const startBtn = document.getElementById("startQuizBtn");
+      startBtn.disabled = set.questions.length === 0;
+      startBtn.style.opacity = set.questions.length === 0 ? "0.5" : "1";
+
+      const listEl = document.getElementById("quizManageList");
+      listEl.innerHTML = "";
+
+      if (set.questions.length === 0) {
+        listEl.innerHTML = `<div style="color:var(--text-secondary); font-size:0.88rem; margin-top:6px;">No quiz questions in this set yet. Use the form above to add Multiple Choice or Short Answer items.</div>`;
+        return;
+      }
+
+      set.questions.forEach((q, i) => {
+        const row = document.createElement("div");
+        row.className = "preview-item";
+        row.style.alignItems = "flex-start";
+
+        const badgeHtml = q.type === "mc"
+          ? `<span class="badge badge-mc">Multiple Choice</span>`
+          : `<span class="badge badge-sa">Short Answer</span>`;
+
+        const subInfo = q.type === "mc"
+          ? `Correct answer: ${escapeHtml(q.options[q.correctIndex])}`
+          : `${q.criteria.length} grading ${q.criteria.length === 1 ? "criterion" : "criteria"}`;
+
+        row.innerHTML = `
+          <div style="flex:1; min-width:0;">
+            <div style="margin-bottom:5px;">${badgeHtml}</div>
+            <div style="font-weight:600; margin-bottom:3px; word-break:break-word;">${i + 1}. ${escapeHtml(q.prompt)}</div>
+            <div style="color:var(--text-secondary); font-size:0.84rem;">${subInfo}</div>
+          </div>
+          <button type="button" class="btn btn-danger btn-sm" data-del-q="${q.id}">Delete</button>
+        `;
+        row.querySelector("[data-del-q]").addEventListener("click", () => deleteQuizQuestion(q.id));
+        listEl.appendChild(row);
+      });
+    }
+
+    function renderQuizTakeView() {
+      const container = document.getElementById("quizTakeQuestionsContainer");
+      container.innerHTML = "";
+      const session = state.quizSession;
+
+      session.questions.forEach((q, idx) => {
+        const card = document.createElement("div");
+        card.className = "quiz-question-card";
+
+        const typeLabel = q.type === "mc" ? "Multiple Choice" : "Short Answer";
+        card.innerHTML = `
+          <div class="quiz-q-header">
+            <span>Question ${idx + 1} of ${session.questions.length}</span>
+            <span>${typeLabel}</span>
+          </div>
+          <div class="quiz-q-prompt">${escapeHtml(q.prompt)}</div>
+        `;
+
+        if (q.type === "mc") {
+          q.options.forEach((opt, optIdx) => {
+            const choiceEl = document.createElement("div");
+            choiceEl.className = "quiz-choice";
+            if (session.userAnswers[q.id] === optIdx) {
+              choiceEl.classList.add("selected");
+            }
+            choiceEl.innerHTML = `
+              <input type="radio" name="take_${q.id}" ${session.userAnswers[q.id] === optIdx ? "checked" : ""} />
+              <span>${escapeHtml(opt)}</span>
+            `;
+            choiceEl.addEventListener("click", () => {
+              session.userAnswers[q.id] = optIdx;
+              renderQuizTakeView();
+            });
+            card.appendChild(choiceEl);
+          });
+        } else {
+          const textarea = document.createElement("textarea");
+          textarea.placeholder = "Type your response here... (Grading criteria will be shown after you submit the entire quiz)";
+          textarea.value = session.userAnswers[q.id] || "";
+          textarea.addEventListener("input", (e) => {
+            session.userAnswers[q.id] = e.target.value;
+            updateQuizAnsweredCounter();
+          });
+          card.appendChild(textarea);
+        }
+
+        container.appendChild(card);
+      });
+
+      updateQuizAnsweredCounter();
+    }
+
     // ==================== TAB NAVIGATION ====================
     document.querySelectorAll(".tab-btn").forEach(btn => {
       btn.addEventListener("click", () => {
@@ -1239,17 +1743,8 @@
       // Render Milestone 2 Flashcards Module
       renderFlashcardsSection(set);
 
-      const quizPreviewEl = document.getElementById("quizPreviewList");
-      if (set.questions.length === 0) {
-        quizPreviewEl.innerHTML = `<div style="color:var(--text-secondary); font-size:0.88rem; margin-top:6px;">No quiz questions in this set yet.</div>`;
-      } else {
-        quizPreviewEl.innerHTML = set.questions.map((q, i) => `
-          <div class="preview-item">
-            <span><strong>${i + 1}. ${escapeHtml(q.prompt)}</strong></span>
-            <span class="milestone-pill">${q.type === "mc" ? "Multiple Choice" : "Short Answer"}</span>
-          </div>
-        `).join("");
-      }
+      // Render Milestone 3 Quiz Module
+      renderQuizSection(set);
 
       renderTabs();
     }
@@ -1269,6 +1764,7 @@
     }
 
     // Boot application
+    initMcOptionsBuilder(4);
     loadState();
   </script>
 </body>
