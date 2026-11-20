@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>StudyForge — Milestone 1: Core & Set Management</title>
+  <title>StudyForge — Milestone 2: Flashcard Module &amp; Interactive Player</title>
   <style>
     /* ==================== CSS DESIGN TOKENS ==================== */
     :root {
@@ -308,6 +308,90 @@
       font-size: 0.8rem;
     }
 
+    /* ==================== FLASHCARD 3D STAGE & CONTROLS ==================== */
+    .flashcard-stage {
+      perspective: 1100px;
+      margin: 8px auto 20px;
+      max-width: 660px;
+    }
+
+    .flashcard {
+      width: 100%;
+      min-height: 270px;
+      position: relative;
+      transform-style: preserve-3d;
+      transition: transform 0.45s cubic-bezier(0.2, 0.8, 0.2, 1);
+      cursor: pointer;
+      user-select: none;
+    }
+
+    .flashcard.flipped {
+      transform: rotateY(180deg);
+    }
+
+    .flashcard-face {
+      position: absolute;
+      inset: 0;
+      backface-visibility: hidden;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      box-shadow: var(--shadow);
+      padding: 36px 32px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+    }
+
+    .flashcard-face.back {
+      transform: rotateY(180deg);
+      border-color: var(--accent);
+      background: #1f2433;
+    }
+
+    .card-side-badge {
+      position: absolute;
+      top: 14px;
+      left: 18px;
+      font-size: 0.72rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--text-secondary);
+      font-weight: 700;
+    }
+
+    .flashcard-text {
+      font-size: 1.35rem;
+      font-weight: 600;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+
+    .flashcard-controls {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 28px;
+    }
+
+    .card-counter {
+      font-size: 0.92rem;
+      font-weight: 700;
+      color: var(--text-secondary);
+      min-width: 84px;
+      text-align: center;
+    }
+
+    .form-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+    }
+
     /* ==================== PANELS & CARDS ==================== */
     .panel {
       background: var(--bg-card);
@@ -507,6 +591,9 @@
       .main {
         padding: 24px 18px;
       }
+      .form-row {
+        grid-template-columns: 1fr;
+      }
     }
   </style>
 </head>
@@ -519,7 +606,7 @@
         <div class="brand-badge">SF</div>
         <span>StudyForge</span>
       </div>
-      <span class="milestone-pill">Milestone 1</span>
+      <span class="milestone-pill">Milestone 2</span>
     </div>
 
     <div class="sidebar-section-header">
@@ -539,12 +626,14 @@
   </aside>
 
   <!-- ==================== MAIN WORKSPACE ==================== -->
-  <main class="main">
-    <!-- Empty State when all sets are deleted -->
+  <main class="main" id="mainContainer">
+    <!-- Empty State when no sets exist -->
     <div id="noSetSelectedView" class="empty-state hidden">
       <h2 style="color: var(--text-primary); margin-bottom: 8px;">No Study Sets Found</h2>
-      <p style="margin-bottom: 18px;">Create your first study set to start organizing flashcards and quizzes.</p>
-      <button class="btn btn-primary" id="emptyCreateSetBtn">+ Create Your First Set</button>
+      <p style="margin-bottom: 18px; max-width: 440px; margin-inline: auto;">
+        Create your first study set to start organizing flashcards and custom self-graded quizzes.
+      </p>
+      <button type="button" class="btn btn-primary" id="emptyCreateSetBtn">+ Create First Study Set</button>
     </div>
 
     <!-- Active Set Workspace -->
@@ -555,12 +644,12 @@
           <p class="set-desc-display" id="activeSetDesc"></p>
         </div>
         <div style="display:flex; gap:8px;">
-          <button class="btn btn-secondary btn-sm" id="openEditSetBtn">Rename / Edit Set</button>
-          <button class="btn btn-danger btn-sm" id="openDeleteSetBtn">Delete Set</button>
+          <button type="button" class="btn btn-secondary btn-sm" id="openEditSetBtn">Rename / Edit Set</button>
+          <button type="button" class="btn btn-danger btn-sm" id="openDeleteSetBtn">Delete Set</button>
         </div>
       </div>
 
-      <!-- Set Overview Stats -->
+      <!-- Summary Stat Cards -->
       <div class="stats-grid">
         <div class="stat-card">
           <div class="stat-label">Flashcards in Set</div>
@@ -570,31 +659,79 @@
           <div class="stat-label">Quiz Questions in Set</div>
           <div class="stat-value" id="statQuizCount">0</div>
         </div>
+        <div class="stat-card">
+          <div class="stat-label">Storage Engine</div>
+          <div class="stat-value" style="font-size: 1.15rem; color: var(--success); margin-top: 8px;">Browser LocalStorage</div>
+        </div>
       </div>
 
-      <!-- Mode Tabs -->
+      <!-- Separated Mode Tabs -->
       <div class="tabs">
-        <button class="tab-btn active" data-tab="flashcards" id="tabFlashcards">
-          <span>Flashcards</span>
-          <span class="tab-count" id="tabFcCount">0</span>
+        <button type="button" class="tab-btn active" data-tab="flashcards" id="tabFlashcards">
+          Flashcards <span class="tab-count" id="tabFcCount">0</span>
         </button>
-        <button class="tab-btn" data-tab="quiz" id="tabQuiz">
-          <span>Quiz</span>
-          <span class="tab-count" id="tabQuizCount">0</span>
+        <button type="button" class="tab-btn" data-tab="quiz" id="tabQuiz">
+          Quiz <span class="tab-count" id="tabQuizCount">0</span>
         </button>
       </div>
 
-      <!-- Flashcards Tab Content (Milestone 1 Foundation) -->
+      <!-- Flashcards Tab Content (Milestone 2 Active) -->
       <section id="flashcardsSection">
+        <!-- Interactive 3D Flashcard Player -->
+        <div id="flashcardPlayerArea">
+          <div class="flashcard-stage">
+            <div class="flashcard" id="flashcardEl" title="Click or press Space to flip">
+              <div class="flashcard-face front">
+                <span class="card-side-badge">Front (Click or Space to flip)</span>
+                <div class="flashcard-text" id="fcFrontText"></div>
+              </div>
+              <div class="flashcard-face back">
+                <span class="card-side-badge">Back</span>
+                <div class="flashcard-text" id="fcBackText"></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="flashcard-controls">
+            <button type="button" class="btn btn-secondary" id="prevCardBtn">&larr; Prev</button>
+            <span class="card-counter" id="cardCounter">1 / 1</span>
+            <button type="button" class="btn btn-secondary" id="nextCardBtn">Next &rarr;</button>
+            <button type="button" class="btn btn-secondary btn-sm" id="flipCardBtn">Flip (Space)</button>
+            <button type="button" class="btn btn-secondary btn-sm" id="shuffleCardsBtn">Shuffle Deck</button>
+          </div>
+        </div>
+
+        <div id="flashcardEmptyState" class="empty-state hidden" style="margin-bottom: 24px;">
+          <h3 style="color: var(--text-primary); margin-bottom: 6px;">No Flashcards in This Set</h3>
+          <p>Add your first flashcard below to start practicing with the 3D flip player.</p>
+        </div>
+
+        <!-- Add Flashcard Form -->
         <div class="panel">
           <div class="panel-header">
-            <h3 class="panel-title">Flashcard Deck Foundation</h3>
-            <span class="milestone-pill">Player &amp; Editor in Milestone 2</span>
+            <h3 class="panel-title">Add New Flashcard</h3>
           </div>
-          <p style="color: var(--text-secondary); font-size: 0.92rem;">
-            This study set currently stores the following flashcards in <code>localStorage</code>. In <strong>Milestone 2</strong>, we will unlock the 3D flip stage, keyboard shortcuts, shuffling, and card creation form here.
-          </p>
-          <div class="preview-list" id="fcPreviewList"></div>
+          <form id="addFlashcardForm">
+            <div class="form-row">
+              <div class="form-group">
+                <label for="newFcFront">Front (Term / Prompt) *</label>
+                <textarea id="newFcFront" placeholder="e.g., What is the time complexity of binary search?" required></textarea>
+              </div>
+              <div class="form-group">
+                <label for="newFcBack">Back (Definition / Answer) *</label>
+                <textarea id="newFcBack" placeholder="e.g., O(log n) on a sorted array." required></textarea>
+              </div>
+            </div>
+            <button type="submit" class="btn btn-primary">+ Add Flashcard</button>
+          </form>
+        </div>
+
+        <!-- Manage Flashcards List -->
+        <div class="panel">
+          <div class="panel-header">
+            <h3 class="panel-title">Cards in This Set (<span id="fcManageCount">0</span>)</h3>
+          </div>
+          <div class="preview-list" id="fcManageList"></div>
         </div>
       </section>
 
@@ -710,7 +847,10 @@
       sets: [],
       activeSetId: null,
       activeTab: "flashcards", // 'flashcards' | 'quiz'
-      modalMode: "create"      // 'create' | 'edit'
+      modalMode: "create",     // 'create' | 'edit'
+      fcIndex: 0,
+      fcFlipped: false,
+      fcOrder: []
     };
 
     /**
@@ -736,6 +876,7 @@
       } else {
         state.activeSetId = null;
       }
+      resetFlashcardDeck(false);
       renderAll();
     }
 
@@ -772,6 +913,7 @@
     // ==================== SET CRUD OPERATIONS ====================
     function selectSet(setId) {
       state.activeSetId = setId;
+      resetFlashcardDeck(false);
       renderAll();
     }
 
@@ -823,6 +965,7 @@
         };
         state.sets.push(newSet);
         state.activeSetId = newSet.id;
+        resetFlashcardDeck(false);
         saveState();
         renderAll();
         showToast(`Created set "${title}"`);
@@ -859,6 +1002,7 @@
       const deletedTitle = current.title;
       state.sets = state.sets.filter(s => s.id !== current.id);
       state.activeSetId = state.sets.length > 0 ? state.sets[0].id : null;
+      resetFlashcardDeck(false);
       saveState();
       document.getElementById("deleteConfirmModal").classList.add("hidden");
       renderAll();
@@ -869,10 +1013,171 @@
     document.getElementById("resetDemoBtn").addEventListener("click", () => {
       state.sets = JSON.parse(JSON.stringify(defaultSets));
       state.activeSetId = state.sets[0].id;
+      resetFlashcardDeck(false);
       saveState();
       renderAll();
       showToast("Demo study sets restored");
     });
+
+    // ==================== FLASHCARD MODULE (MILESTONE 2) ====================
+    function resetFlashcardDeck(shuffle = false) {
+      const set = getActiveSet();
+      state.fcIndex = 0;
+      state.fcFlipped = false;
+      if (!set || set.flashcards.length === 0) {
+        state.fcOrder = [];
+        return;
+      }
+      state.fcOrder = set.flashcards.map((_, idx) => idx);
+      if (shuffle) {
+        for (let i = state.fcOrder.length - 1; i > 0; i--) {
+          const j = Math.floor(Math.random() * (i + 1));
+          [state.fcOrder[i], state.fcOrder[j]] = [state.fcOrder[j], state.fcOrder[i]];
+        }
+      }
+    }
+
+    function flipFlashcard() {
+      const set = getActiveSet();
+      if (!set || set.flashcards.length === 0) return;
+      state.fcFlipped = !state.fcFlipped;
+      document.getElementById("flashcardEl").classList.toggle("flipped", state.fcFlipped);
+    }
+
+    function stepFlashcard(delta) {
+      const set = getActiveSet();
+      if (!set || set.flashcards.length === 0) return;
+      const len = state.fcOrder.length;
+      state.fcIndex = (state.fcIndex + delta + len) % len;
+      state.fcFlipped = false;
+      renderFlashcardStage();
+    }
+
+    document.getElementById("flashcardEl").addEventListener("click", flipFlashcard);
+    document.getElementById("flipCardBtn").addEventListener("click", flipFlashcard);
+    document.getElementById("prevCardBtn").addEventListener("click", () => stepFlashcard(-1));
+    document.getElementById("nextCardBtn").addEventListener("click", () => stepFlashcard(1));
+    document.getElementById("shuffleCardsBtn").addEventListener("click", () => {
+      const set = getActiveSet();
+      if (!set || set.flashcards.length < 2) {
+        showToast("Add at least 2 cards to shuffle");
+        return;
+      }
+      resetFlashcardDeck(true);
+      renderFlashcardStage();
+      showToast("Deck shuffled");
+    });
+
+    // Keyboard shortcuts: Space to flip, Left/Right arrows to navigate
+    document.addEventListener("keydown", (e) => {
+      if (state.activeTab !== "flashcards") return;
+      const activeTag = document.activeElement ? document.activeElement.tagName : "";
+      if (["INPUT", "TEXTAREA", "SELECT"].includes(activeTag)) return;
+      if (!document.getElementById("setFormModal").classList.contains("hidden")) return;
+      if (!document.getElementById("deleteConfirmModal").classList.contains("hidden")) return;
+
+      if (e.code === "Space") {
+        e.preventDefault();
+        flipFlashcard();
+      } else if (e.code === "ArrowRight") {
+        e.preventDefault();
+        stepFlashcard(1);
+      } else if (e.code === "ArrowLeft") {
+        e.preventDefault();
+        stepFlashcard(-1);
+      }
+    });
+
+    // Add Flashcard Form Submission
+    document.getElementById("addFlashcardForm").addEventListener("submit", (e) => {
+      e.preventDefault();
+      const set = getActiveSet();
+      if (!set) return;
+      const frontInput = document.getElementById("newFcFront");
+      const backInput = document.getElementById("newFcBack");
+      const front = frontInput.value.trim();
+      const back = backInput.value.trim();
+      if (!front || !back) return;
+
+      set.flashcards.push({
+        id: generateId("fc"),
+        front,
+        back
+      });
+      saveState();
+      frontInput.value = "";
+      backInput.value = "";
+      resetFlashcardDeck(false);
+      state.fcIndex = set.flashcards.length - 1;
+      renderAll();
+      showToast("Flashcard added");
+      frontInput.focus();
+    });
+
+    function deleteFlashcard(fcId) {
+      const set = getActiveSet();
+      if (!set) return;
+      set.flashcards = set.flashcards.filter(c => c.id !== fcId);
+      saveState();
+      resetFlashcardDeck(false);
+      renderAll();
+      showToast("Flashcard deleted");
+    }
+
+    function renderFlashcardStage() {
+      const set = getActiveSet();
+      const playerArea = document.getElementById("flashcardPlayerArea");
+      const emptyState = document.getElementById("flashcardEmptyState");
+
+      if (!set || set.flashcards.length === 0) {
+        playerArea.classList.add("hidden");
+        emptyState.classList.remove("hidden");
+        return;
+      }
+
+      playerArea.classList.remove("hidden");
+      emptyState.classList.add("hidden");
+
+      if (state.fcOrder.length !== set.flashcards.length) {
+        resetFlashcardDeck(false);
+      }
+
+      const realIdx = state.fcOrder[state.fcIndex];
+      const card = set.flashcards[realIdx];
+
+      const fcEl = document.getElementById("flashcardEl");
+      fcEl.classList.toggle("flipped", state.fcFlipped);
+      document.getElementById("fcFrontText").textContent = card.front;
+      document.getElementById("fcBackText").textContent = card.back;
+      document.getElementById("cardCounter").textContent = `${state.fcIndex + 1} / ${set.flashcards.length}`;
+    }
+
+    function renderFlashcardsSection(set) {
+      renderFlashcardStage();
+
+      document.getElementById("fcManageCount").textContent = set.flashcards.length;
+      const listEl = document.getElementById("fcManageList");
+      listEl.innerHTML = "";
+
+      if (set.flashcards.length === 0) {
+        listEl.innerHTML = `<div style="color:var(--text-secondary); font-size:0.88rem; margin-top:6px;">No flashcards in this set yet.</div>`;
+        return;
+      }
+
+      set.flashcards.forEach((card, i) => {
+        const row = document.createElement("div");
+        row.className = "preview-item";
+        row.innerHTML = `
+          <div style="flex:1; min-width:0;">
+            <div style="font-weight:600; margin-bottom:3px; word-break:break-word;">${i + 1}. ${escapeHtml(card.front)}</div>
+            <div style="color:var(--text-secondary); font-size:0.86rem; word-break:break-word;">${escapeHtml(card.back)}</div>
+          </div>
+          <button type="button" class="btn btn-danger btn-sm" data-del-fc="${card.id}">Delete</button>
+        `;
+        row.querySelector("[data-del-fc]").addEventListener("click", () => deleteFlashcard(card.id));
+        listEl.appendChild(row);
+      });
+    }
 
     // ==================== TAB NAVIGATION ====================
     document.querySelectorAll(".tab-btn").forEach(btn => {
@@ -931,18 +1236,8 @@
       document.getElementById("tabFcCount").textContent = set.flashcards.length;
       document.getElementById("tabQuizCount").textContent = set.questions.length;
 
-      // Populate Milestone 1 data inspection previews
-      const fcPreviewEl = document.getElementById("fcPreviewList");
-      if (set.flashcards.length === 0) {
-        fcPreviewEl.innerHTML = `<div style="color:var(--text-secondary); font-size:0.88rem; margin-top:6px;">No flashcards in this set yet.</div>`;
-      } else {
-        fcPreviewEl.innerHTML = set.flashcards.map((c, i) => `
-          <div class="preview-item">
-            <span><strong>${i + 1}. ${escapeHtml(c.front)}</strong></span>
-            <span style="color:var(--text-secondary);">${escapeHtml(c.back)}</span>
-          </div>
-        `).join("");
-      }
+      // Render Milestone 2 Flashcards Module
+      renderFlashcardsSection(set);
 
       const quizPreviewEl = document.getElementById("quizPreviewList");
       if (set.questions.length === 0) {
